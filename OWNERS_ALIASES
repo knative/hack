@@ -5,6 +5,12 @@ aliases:
     - markusthoemmes
     - mattmoor
     - tcnghia
-  wg-leads:
-    # TODO(leads): add yourselves to this list and optionally rename it with your
-    # WG name. If you choose to rename, update the alias name in the OWNERS file.
+  productivity-approvers:
+    - chaodaiG
+    - chizhg
+    - coryrc
+    - n3wscott
+  productivity-reviewers:
+    - steuhs
+    - peterfeifanchen
+    - efiturri
