@@ -1,5 +1,3 @@
-// +build hack
-
 /*
 Copyright 2020 The Knative Authors
 

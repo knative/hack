@@ -98,30 +98,13 @@ echo ">> Testing GCR/GCS values"
 test_function ${SUCCESS} "GCR flag is ignored" parse_flags --release-gcr foo
 test_function ${SUCCESS} "GCS flag is ignored" parse_flags --release-gcs foo
 
-default_release_dir="$(ls -1 $(dirname $0)/../..)"
 test_function ${SUCCESS} ":ko.local:" call_function_post "echo :\$KO_DOCKER_REPO:" parse_flags
 test_function ${SUCCESS} "::" call_function_post "echo :\$RELEASE_GCS_BUCKET:" parse_flags
-test_function ${SUCCESS} ":${default_release_dir}:" call_function_post "echo :\$RELEASE_DIR:" parse_flags
 
 test_function ${SUCCESS} ":gcr.io/knative-nightly:" call_function_post "echo :\$KO_DOCKER_REPO:" parse_flags --publish
-test_function ${SUCCESS} ":knative-nightly/test-infra:${default_release_dir}:" call_function_post "echo :\$RELEASE_GCS_BUCKET:\$RELEASE_DIR" parse_flags --publish
 test_function ${SUCCESS} ":foo::" call_function_post "echo :\$RELEASE_DIR:\$RELEASE_GCS_BUCKET:" parse_flags --publish --release-dir foo
 
 test_function ${SUCCESS} ":foo:" call_function_post "echo :\$KO_DOCKER_REPO:" parse_flags --release-gcr foo --publish
 test_function ${SUCCESS} ":foo::" call_function_post "echo :\$RELEASE_GCS_BUCKET:\$RELEASE_DIR:" parse_flags --release-gcs foo --publish
-
-echo ">> Testing publishing to GitHub"
-
-test_function ${SUCCESS} "" publish_to_github
-test_function ${FAILURE} "No such file" call_function_pre PUBLISH_TO_GITHUB=1 publish_to_github a.yaml b.yaml
-test_function ${SUCCESS} "release create" mock_publish_to_github $(mktemp) $(mktemp)
-test_function ${FAILURE} "Cannot publish release to GitHub" mock_publish_to_github_fails $(mktemp) $(mktemp)
-
-echo ">> Testing validation tests"
-
-test_function ${SUCCESS} "Running release validation" run_validation_tests true
-test_function ${SUCCESS} "" call_function_pre SKIP_TESTS=1 run_validation_tests true
-test_function ${SUCCESS} "i_passed" run_validation_tests "echo i_passed"
-test_function ${FAILURE} "validation tests failed" run_validation_tests false
 
 echo ">> All tests passed"

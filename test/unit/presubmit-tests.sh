@@ -26,7 +26,7 @@ source $(dirname $0)/test-helper.sh
 set -e
 
 function init_test_env() {
-  source $(dirname $0)/../../scripts/presubmit-tests.sh
+  source $(dirname $0)/../../presubmit-tests.sh
 
   # Mock external tools for testing purposes.
   function list_changed_files() {
@@ -187,7 +187,7 @@ function test_custom_runners_fail_fast() {
 }
 
 function test_exempt_md() {
-  source $(dirname $0)/../../scripts/presubmit-tests.sh
+  source $(dirname $0)/../../presubmit-tests.sh
 
   function list_changed_files() {
     echo "README.md"
@@ -200,7 +200,7 @@ function test_exempt_md() {
 }
 
 function test_exempt_no_md() {
-  source $(dirname $0)/../../scripts/presubmit-tests.sh
+  source $(dirname $0)/../../presubmit-tests.sh
 
   function list_changed_files() {
     echo "OWNERS"
@@ -212,7 +212,7 @@ function test_exempt_no_md() {
 }
 
 function test_exempt_md_code() {
-  source $(dirname $0)/../../scripts/presubmit-tests.sh
+  source $(dirname $0)/../../presubmit-tests.sh
 
   function list_changed_files() {
     echo "OWNERS"
@@ -225,7 +225,7 @@ function test_exempt_md_code() {
 }
 
 function test_exempt_code() {
-  source $(dirname $0)/../../scripts/presubmit-tests.sh
+  source $(dirname $0)/../../presubmit-tests.sh
 
   function list_changed_files() {
     echo "foo.go"
