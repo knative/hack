@@ -3,7 +3,7 @@
 `hack` is a collection of scripts used to bootstrap CI processes and other vital
 entrypoint functionallity.
 
-## Using the `presubmit-tests.sh` helper script
+## Using the `hack/presubmit-tests.sh` helper script
 
 This is a helper script to run the presubmit tests. To use it:
 
@@ -85,7 +85,7 @@ skipped.
 ### Sample presubmit test script
 
 ```bash
-source vendor/knative.dev/hack/presubmit-tests.sh
+source vendor/knative.dev/hack/hack/presubmit-tests.sh
 
 function post_build_tests() {
   echo "Cleaning up after build tests"
