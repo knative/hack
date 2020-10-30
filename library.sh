@@ -21,6 +21,9 @@
 # GCP project where all tests related resources live
 readonly KNATIVE_TESTS_PROJECT=knative-tests
 
+# Release family used as the default for upgrades if release is not set.
+readonly CURRENT_RELEASE=v0.19
+
 # Conveniently set GOPATH if unset
 if [[ ! -v GOPATH ]]; then
   export GOPATH="$(go env GOPATH)"
@@ -503,7 +506,7 @@ function add_trap {
 #   "--upgrade", bool, do upgrade.
 #   "--release <version>" used with upgrade. The release version to upgrade
 #                         Knative components. ex: --release v0.18. Defaults to
-#                         "master".
+#                         ${CURRENT_RELEASE}.
 # Additional dependencies can be included in the upgrade by providing them in a
 # global env var: FLOATING_DEPS
 # --upgrade will set GOPROXY to direct unless it is already set.
@@ -516,7 +519,7 @@ function go_update_deps() {
   echo "=== Update Deps for Golang"
 
   local UPGRADE=0
-  local VERSION="master"
+  local VERSION="${CURRENT_RELEASE}"
   while [[ $# -ne 0 ]]; do
     parameter=$1
     case ${parameter} in
