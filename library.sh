@@ -554,8 +554,8 @@ function go_update_deps() {
   echo "--- Go mod tidy and vendor"
 
   # Prune modules.
-  go mod tidy
-  go mod vendor
+  go mod tidy 2>&1 | grep -v "ignoring symlink" || true
+  go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
 
   echo "--- Removing unwanted vendor files"
 
