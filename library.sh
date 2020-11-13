@@ -554,8 +554,11 @@ function go_update_deps() {
   echo "--- Go mod tidy and vendor"
 
   # Prune modules.
+  local orig_pipefail_opt=$(shopt -p -o pipefail)
+  set -o pipefail
   go mod tidy 2>&1 | grep -v "ignoring symlink" || true
   go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
+  eval "$orig_pipefail_opt"
 
   echo "--- Removing unwanted vendor files"
 
