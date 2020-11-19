@@ -22,5 +22,8 @@ $(dirname $0)/microbenchmarks-run.sh "$OUTPUT_DIR/new.txt"
 git checkout "$REVISION"
 $(dirname $0)/microbenchmarks-run.sh "$OUTPUT_DIR/old.txt"
 
+# Print results in console
+benchstat "$OUTPUT_DIR/old.txt" "$OUTPUT_DIR/new.txt"
+
 # Generate html results
 benchstat -html "$OUTPUT_DIR/old.txt" "$OUTPUT_DIR/new.txt" >> "$OUTPUT_DIR/results.html"
