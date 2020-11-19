@@ -746,6 +746,14 @@ function shellcheck_new_files() {
   fi
 }
 
+function latest_version() {
+  local semver=$(git describe --match "v[0-9]*" --abbrev=0)
+  local major_minor=$(echo "$semver" | cut -d. -f1-2)
+
+  # Get the latest patch release for the major minor
+  git tag -l "${major_minor}*" | sort -r --version-sort | head -n1
+}
+
 # Initializations that depend on previous functions.
 # These MUST come last.
 
