@@ -16,11 +16,11 @@ OUTPUT_DIR=${ARTIFACTS:-$(mktemp -d)}
 echo "Outputs will be at $OUTPUT_DIR"
 
 # Run this revision benchmarks
-$(dirname $0)/microbenchmarks-run.sh "$OUTPUT_DIR/new.txt"
+"$(dirname $0)/microbenchmarks-run.sh" "$OUTPUT_DIR/new.txt"
 
 # Run other revision benchmarks
 git checkout "$REVISION"
-$(dirname $0)/microbenchmarks-run.sh "$OUTPUT_DIR/old.txt"
+"$(dirname $0)/microbenchmarks-run.sh" "$OUTPUT_DIR/old.txt"
 
 # Print results in console
 benchstat "$OUTPUT_DIR/old.txt" "$OUTPUT_DIR/new.txt"
