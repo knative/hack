@@ -412,6 +412,8 @@ function start_latest_knative_serving() {
 # Install Knative Eventing in the current cluster.
 # Parameters: $1 - Knative Eventing crds manifest.
 #             $2 - Knative Eventing core manifest.
+#             $3 - Knative Eventing in memory channel manifest.
+#             $4 - Knative Eventing mt channel broker manifest.
 function start_knative_eventing() {
   header "Starting Knative Eventing"
   subheader "Installing Knative Eventing"
@@ -419,6 +421,10 @@ function start_knative_eventing() {
   kubectl apply -f "$1"
   echo "Installing Eventing core components from $2"
   kubectl apply -f "$2"
+  echo "Installing Eventing in memory channel from $3"
+  kubectl apply -f "$3"
+  echo "Installing Eventing mt channel broker from $4"
+  kubectl apply -f "$4"
   wait_until_pods_running knative-eventing || return 1
 }
 
@@ -426,12 +432,14 @@ function start_knative_eventing() {
 # Parameters: $1 - Knative Eventing version number, e.g. 0.6.0.
 function start_release_knative_eventing() {
   start_knative_eventing "https://storage.googleapis.com/knative-releases/eventing/previous/v$1/eventing-crds.yaml" \
-    "https://storage.googleapis.com/knative-releases/eventing/previous/v$1/eventing-core.yaml"
+    "https://storage.googleapis.com/knative-releases/eventing/previous/v$1/eventing-core.yaml" \
+    "https://storage.googleapis.com/knative-releases/eventing/previous/v$1/in-memory-channel.yaml" \
+    "https://storage.googleapis.com/knative-releases/eventing/previous/v$1/mt-channel-broker.yaml"
 }
 
 # Install the latest stable Knative Eventing in the current cluster.
 function start_latest_knative_eventing() {
-  start_knative_eventing "${KNATIVE_EVENTING_RELEASE_CRDS}" "${KNATIVE_EVENTING_RELEASE_CORE}"
+  start_knative_eventing "${KNATIVE_EVENTING_RELEASE_CRDS}" "${KNATIVE_EVENTING_RELEASE_CORE}" "${KNATIVE_EVENTING_IN_MEMORY_CHANNEL}" "${KNATIVE_EVENTING_MT_CHANNEL_BROKER}"
 }
 
 # Install Knative Eventing extension in the current cluster.
@@ -766,4 +774,6 @@ readonly KNATIVE_SERVING_RELEASE_CORE="$(get_latest_knative_yaml_source "serving
 readonly KNATIVE_NET_ISTIO_RELEASE="$(get_latest_knative_yaml_source "net-istio" "net-istio")"
 readonly KNATIVE_EVENTING_RELEASE_CRDS="$(get_latest_knative_yaml_source "eventing" "eventing-crds")"
 readonly KNATIVE_EVENTING_RELEASE_CORE="$(get_latest_knative_yaml_source "eventing" "eventing-core")"
+readonly KNATIVE_EVENTING_MT_CHANNEL_BROKER="$(get_latest_knative_yaml_source "eventing" "mt-channel-broker")"
+readonly KNATIVE_EVENTING_IN_MEMORY_CHANNEL="$(get_latest_knative_yaml_source "eventing" "in-memory-channel")"
 readonly KNATIVE_EVENTING_SUGAR_CONTROLLER_RELEASE="$(get_latest_knative_yaml_source "eventing" "eventing-sugar-controller")"
