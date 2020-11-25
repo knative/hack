@@ -36,10 +36,6 @@ function post_build_tests() {
   return ${failed}
 }
 
-function unit_tests() {
-  subheader "Skipping running unit tests since we don't have actual Go code in this repo."
-}
-
 # Run our custom unit tests after the standard unit tests.
 
 function post_unit_tests() {
