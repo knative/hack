@@ -75,5 +75,6 @@ func ensureIsValid(filename string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("%w: %s", ErrCallerNotAllowed, filename)
+	return fmt.Errorf("%w, tried using from: %s",
+		ErrCallerNotAllowed, filename)
 }
