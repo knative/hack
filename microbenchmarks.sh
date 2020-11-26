@@ -37,6 +37,13 @@ function microbenchmarks_run() {
 # git fetch upstream
 # source microbenchmarks.sh
 # microbenchmarks_run_and_compare upstream/master
+#
+# NOTE: Hypothetically we should run these microbenchmarks on a machine running only a kernel and a shell,
+# but this might be sometimes hard to achieve unless you have a spare computer to play with.
+# When running microbenchmarks on your dev machine, make sure you have the bare minimum applications running on your laptop,
+# otherwise you'll get a variance too high.
+# Close Slack, the browser, the IDE, stop Docker, stop Netflix and grab a coffee while waiting for the results.
+# Depending on the benchmark complexity/reproducibility, if the variance is too high, repeat the benchmarks.
 function microbenchmarks_run_and_compare() {
   if [ "$1" == "" ] || [ $# -gt 1 ]; then
     echo "Error: Expecting an argument" >&2
