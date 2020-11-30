@@ -98,6 +98,23 @@ function function_exists() {
   [[ "$(type -t $1)" == "function" ]]
 }
 
+# GitHub Actions aware header grouping.
+function start_group() {
+  if [[ -n ${GITHUB_WORKFLOW} ]]; then
+    echo "::group::$1"
+  else
+    echo "--- $1"
+  fi
+}
+
+# GitHub Actions aware end of header grouping.
+function end_group() {
+  if [[ -n ${GITHUB_WORKFLOW} ]]; then
+    echo "::endgroup::"
+  fi
+}
+
+
 # Waits until the given object doesn't exist.
 # Parameters: $1 - the kind of the object.
 #             $2 - object's name.
@@ -528,7 +545,7 @@ function go_update_deps() {
   done
 
   if [[ $UPGRADE == 1 ]]; then
-    echo "--- Upgrading to ${VERSION}"
+    start_group "Upgrading to ${VERSION}"
     # From shell parameter expansion:
     # ${parameter:+word}
     # If parameter is null or unset, nothing is substituted, otherwise the expansion of word is substituted.
@@ -546,9 +563,10 @@ function go_update_deps() {
     else
       echo "Nothing to upgrade."
     fi
+    end_group
   fi
 
-  echo "--- Go mod tidy and vendor"
+  start_group "Go mod tidy and vendor"
 
   # Prune modules.
   local orig_pipefail_opt=$(shopt -p -o pipefail)
@@ -557,7 +575,7 @@ function go_update_deps() {
   go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
   eval "$orig_pipefail_opt"
 
-  echo "--- Removing unwanted vendor files"
+  start_group "Removing unwanted vendor files"
 
   # Remove unwanted vendor files
   find vendor/ \( -name "OWNERS" \
@@ -567,12 +585,15 @@ function go_update_deps() {
     -o -name "*_test.go" \) -exec rm -f {} +
 
   export GOFLAGS=-mod=vendor
+  end_group
 
-  echo "--- Updating licenses"
+  start_group "Updating licenses"
   update_licenses third_party/VENDOR-LICENSE "./..."
+  end_group
 
-  echo "--- Removing broken symlinks"
+  start_group "Removing broken symlinks"
   remove_broken_symlinks ./vendor
+  end_group
 }
 
 # Run kntest tool, error out and ask users to install it if it's not currently installed.
