@@ -98,18 +98,32 @@ function function_exists() {
   [[ "$(type -t $1)" == "function" ]]
 }
 
-# GitHub Actions aware header grouping.
-function start_group() {
-  if [[ -n ${GITHUB_WORKFLOW} ]]; then
-    echo "::group::$1"
+# GitHub Actions aware output grouping.
+function group() {
+  # End the group is there is already a group.
+  if [ -z ${__GROUP_TRACKER+x} ]; then
+    export __GROUP_TRACKER="grouping"
+    trap end_group EXIT
   else
-    echo "--- $1"
+    end_group
+  fi
+  # Start a new group.
+  start_group "$@"
+}
+
+# GitHub Actions aware output grouping.
+function start_group() {
+  if [[ -n ${GITHUB_WORKFLOW:-} ]]; then
+    echo "::group::$@"
+    trap end_group EXIT
+  else
+    echo "--- $@"
   fi
 }
 
-# GitHub Actions aware end of header grouping.
+# GitHub Actions aware end of output grouping.
 function end_group() {
-  if [[ -n ${GITHUB_WORKFLOW} ]]; then
+  if [[ -n ${GITHUB_WORKFLOW:-} ]]; then
     echo "::endgroup::"
   fi
 }
@@ -545,7 +559,7 @@ function go_update_deps() {
   done
 
   if [[ $UPGRADE == 1 ]]; then
-    start_group "Upgrading to ${VERSION}"
+    group "Upgrading to ${VERSION}"
     # From shell parameter expansion:
     # ${parameter:+word}
     # If parameter is null or unset, nothing is substituted, otherwise the expansion of word is substituted.
@@ -563,10 +577,9 @@ function go_update_deps() {
     else
       echo "Nothing to upgrade."
     fi
-    end_group
   fi
 
-  start_group "Go mod tidy and vendor"
+  group "Go mod tidy and vendor"
 
   # Prune modules.
   local orig_pipefail_opt=$(shopt -p -o pipefail)
@@ -575,7 +588,7 @@ function go_update_deps() {
   go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
   eval "$orig_pipefail_opt"
 
-  start_group "Removing unwanted vendor files"
+  group "Removing unwanted vendor files"
 
   # Remove unwanted vendor files
   find vendor/ \( -name "OWNERS" \
@@ -585,15 +598,12 @@ function go_update_deps() {
     -o -name "*_test.go" \) -exec rm -f {} +
 
   export GOFLAGS=-mod=vendor
-  end_group
 
-  start_group "Updating licenses"
+  group "Updating licenses"
   update_licenses third_party/VENDOR-LICENSE "./..."
-  end_group
 
-  start_group "Removing broken symlinks"
+  group "Removing broken symlinks"
   remove_broken_symlinks ./vendor
-  end_group
 }
 
 # Run kntest tool, error out and ask users to install it if it's not currently installed.
