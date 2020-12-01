@@ -579,7 +579,7 @@ function go_update_deps() {
 # indended to be used like:
 #   export MODULE_NAME=$(go_mod_module_name)
 function go_mod_module_name() {
-  echo $(go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1)
+  go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1
 }
 
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
