@@ -576,7 +576,7 @@ function go_update_deps() {
 }
 
 # Return the go module name of the current module.
-# indended to be used like:
+# Intended to be used like:
 #   export MODULE_NAME=$(go_mod_module_name)
 function go_mod_module_name() {
   go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1
@@ -584,7 +584,7 @@ function go_mod_module_name() {
 
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
 # for k8s client gen mixed with go mod.
-# indended to be used like:
+# Intended to be used like:
 #   export GOPATH=$(go_mod_gopath_hack)
 function go_mod_gopath_hack() {
   local TMP_DIR="$(mktemp -d)"
