@@ -575,6 +575,19 @@ function go_update_deps() {
   remove_broken_symlinks ./vendor
 }
 
+# Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
+# for k8s client gen mixed with go mod.
+# indended to be used like:
+#   export GOPATH=$(go_mod_gopath_hack)
+function go_mod_gopath_hack() {
+  export MODULE_NAME=$(go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1)
+  local TMP_DIR="$(mktemp -d)"
+  local TMP_REPO_PATH="${TMP_DIR}/src/${MODULE_NAME}"
+  mkdir -p "$(dirname "${TMP_REPO_PATH}")" && ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
+
+  echo "${TMP_DIR}"
+}
+
 # Run kntest tool, error out and ask users to install it if it's not currently installed.
 # Parameters: $1..$n - parameters passed to the tool.
 function run_kntest() {
