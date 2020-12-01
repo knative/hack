@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2018 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,14 @@
 
 # Setup the env for doing Knative style codegen.
 
-source $(dirname $0)/../vendor/knative.dev/hack/library.sh
+kn_hack_library=${kn_hack_library:-"$(dirname $0)/../vendor/knative.dev/hack/library.sh"}
+
+if [[ -f "$kn_hack_library" ]]; then
+  source $kn_hack_library
+else
+  echo "this file is intended to be imported from a golang project that vendors knative.dev/hack"
+  exit
+fi
 
 export GOPATH=$(go_mod_gopath_hack)
 export MODULE_NAME=$(go_mod_module_name)
