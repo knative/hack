@@ -575,14 +575,20 @@ function go_update_deps() {
   remove_broken_symlinks ./vendor
 }
 
+# Return the go module name of the current module.
+# indended to be used like:
+#   export MODULE_NAME=$(go_mod_module_name)
+function go_mod_module_name() {
+  echo $(go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1)
+}
+
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
 # for k8s client gen mixed with go mod.
 # indended to be used like:
 #   export GOPATH=$(go_mod_gopath_hack)
 function go_mod_gopath_hack() {
-  export MODULE_NAME=$(go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1)
   local TMP_DIR="$(mktemp -d)"
-  local TMP_REPO_PATH="${TMP_DIR}/src/${MODULE_NAME}"
+  local TMP_REPO_PATH="${TMP_DIR}/src/$(go_mod_module_name)"
   mkdir -p "$(dirname "${TMP_REPO_PATH}")" && ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
 
   echo "${TMP_DIR}"
