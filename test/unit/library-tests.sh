@@ -65,7 +65,6 @@ test_function ${FAILURE} "" is_protected_project ""
 
 echo ">> Testing report_go_test()"
 
-test_report TestSucceeds "^--- PASS: TestSucceeds"
 test_report TestFailsWithFatal "^fatal\s\+TestFailsWithFatal"
 test_report TestFailsWithPanic "^panic: test timed out"
 test_report TestFailsWithSigQuit "^SIGQUIT: quit"
