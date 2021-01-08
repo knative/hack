@@ -497,7 +497,7 @@ function run_go_tool() {
     run="${run}/$2"
   fi
 
-  if [[ -z "$(go list -f '{{.Module.Version}}' $1)" ]]; then
+  if [[ -z "$(go list -mod=readonly -f '{{.Module.Version}}' $1)" ]]; then
     echo "Tool $1/$2 is not included in hack/tools.go, falling back to non-hermetic install (via GOPATH)."
     if [[ -z "$(which ${tool})" ]]; then
       local action=get
