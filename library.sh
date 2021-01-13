@@ -794,11 +794,16 @@ function shellcheck_new_files() {
 }
 
 function latest_version() {
-  local semver=$(git describe --match "v[0-9]*" --abbrev=0)
-  local major_minor=$(echo "$semver" | cut -d. -f1-2)
+  if [ $(current_branch) = "master" ]; then
+    # For master, simply use git tag without major version, this will work even if the release tag is not in the master
+    git tag | sort -r --version-sort | head -n1
+  else
+    local semver=$(git describe --match "v[0-9]*" --abbrev=0)
+    local major_minor=$(echo "$semver" | cut -d. -f1-2)
 
-  # Get the latest patch release for the major minor
-  git tag -l "${major_minor}*" | sort -r --version-sort | head -n1
+    # Get the latest patch release for the major minor
+    git tag -l "${major_minor}*" | sort -r --version-sort | head -n1
+  fi
 }
 
 # Initializations that depend on previous functions.
