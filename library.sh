@@ -794,8 +794,9 @@ function shellcheck_new_files() {
 }
 
 function latest_version() {
-  if [ $(current_branch) = "master" ]; then
-    # For master, simply use git tag without major version, this will work even if the release tag is not in the master
+  if [ $(current_branch) = "master" ] || [ $(current_branch) = "main" ]; then
+    # For main branch, simply use git tag without major version, this will work even
+    # if the release tag is not in the main
     git tag | sort -r --version-sort | head -n1
   else
     local semver=$(git describe --match "v[0-9]*" --abbrev=0)
