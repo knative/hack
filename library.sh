@@ -539,8 +539,8 @@ function go_update_deps() {
 
   export GO111MODULE=on
   export GOFLAGS=""
-  export GONOSUMDB="${GONOSUMDB},knative.dev/*"
-  export GONOPROXY="${GONOPROXY},knative.dev/*"
+  export GONOSUMDB="${GONOSUMDB:-},knative.dev/*"
+  export GONOPROXY="${GONOPROXY:-},knative.dev/*"
 
   echo "=== Update Deps for Golang"
 
