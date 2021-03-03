@@ -26,7 +26,7 @@ import (
 
 // This is a demo of what the CLI looks like, copy and implement your own.
 func main() {
-	registry.Register(example.LoremIpsum{})
+	registry.Register(&example.LoremIpsum{})
 
 	if err := commands.New("knative.dev/hack/schema").Execute(); err != nil {
 		log.Fatal("Error during command execution: ", err)

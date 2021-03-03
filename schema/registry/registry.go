@@ -41,7 +41,7 @@ type GVKable interface {
 func Register(obj GVKable) {
 	t := reflect.TypeOf(obj)
 	gvk := obj.GetGroupVersionKind()
-	r.kinds[gvk.Kind] = t
+	r.kinds[gvk.Kind] = t.Elem()
 }
 
 func Kinds() []string {

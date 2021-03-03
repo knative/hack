@@ -34,7 +34,7 @@ type LoremIpsum struct {
 	Status LoremIpsumStatus `json:"status,omitempty"`
 }
 
-func (l LoremIpsum) GetGroupVersionKind() schema.GroupVersionKind {
+func (l *LoremIpsum) GetGroupVersionKind() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   "example.knative.dev",
 		Version: "v1beta1",
