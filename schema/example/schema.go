@@ -108,6 +108,10 @@ type LoremIpsumStatus struct {
 	// Donec mollis purus id ipsum varius, sit amet ultricies elit laoreet.
 	// +optional
 	Donec *bool `json:"donec,omitempty"`
+
+	// Duis vulputate purus sed porta tristique.
+	// +optional
+	Duis []Duis `json:"duis,omitempty"`
 }
 
 type VerboseTypes struct {
@@ -135,4 +139,14 @@ type VerboseTypes struct {
 	AFloat64 float64 `json:"float64"`
 	// AMap is a field with the type map.
 	AMap map[string]string `json:"map"`
+}
+
+// Duis vulputate purus sed porta tristique.
+type Duis struct {
+	// Maecenas sed velit ac velit fringilla dapibus.
+	Maecenas string `json:"maecenas"`
+
+	//Aenean a purus porttitor nulla rhoncus posuere.
+	// +optional
+	Aenean string `json:"aenean,omitempty"`
 }
