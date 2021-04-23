@@ -21,7 +21,7 @@ function knative_setup() {
 }
 
 # Script entry point.
-initialize "$@" --cloud-provider kind --verbosity 9
+initialize "$@" --cloud-provider kind -v 9
 
 go_test_e2e ./test/e2e || fail_test
 
