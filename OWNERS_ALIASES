@@ -4,13 +4,12 @@ aliases:
     - grantr
     - markusthoemmes
     - mattmoor
-    - tcnghia
-  productivity-approvers:
-    - chaodaiG
+    - rhuss
+  productivity-writers:
     - chizhg
-    - coryrc
     - n3wscott
   productivity-reviewers:
-    - steuhs
-    - peterfeifanchen
-    - efiturri
+  - coryrc
+  - evankanderson
+  - steuhs
+  - yt3liu
