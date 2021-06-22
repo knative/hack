@@ -1,6 +1,7 @@
 approvers:
   - technical-oversight-committee
   - productivity-writers
+  - knative-release-leads
 
 reviewers:
   - productivity-writers
