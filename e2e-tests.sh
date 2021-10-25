@@ -56,12 +56,6 @@ function setup_test_cluster() {
 
   header "Setting up test cluster"
   kubectl get nodes
-  # Set the actual project the test cluster resides in
-  # It will be a project assigned by Boskos if test is running on Prow,
-  # otherwise will be ${E2E_GCP_PROJECT_ID} set up by user.
-  E2E_PROJECT_ID="$(gcloud config get-value project)"
-  export E2E_PROJECT_ID
-  readonly E2E_PROJECT_ID
 
   local k8s_cluster
   k8s_cluster=$(kubectl config current-context)
@@ -72,16 +66,25 @@ function setup_test_cluster() {
   # Acquire cluster admin role for the current user.
   acquire_cluster_admin_role "${k8s_cluster}"
 
-  # Setup KO_DOCKER_REPO if it is a GKE cluster. Incorporate an element of
-  # randomness to ensure that each run properly publishes images. Don't
-  # owerwrite KO_DOCKER_REPO if already set.
-  [ -z "${KO_DOCKER_REPO}" ] && \
-    [[ "${k8s_cluster}" =~ ^gke_.* ]] && \
-    export KO_DOCKER_REPO=gcr.io/${E2E_PROJECT_ID}/${REPO_NAME}-e2e-img/${RANDOM}
+  if (( ! run_tests )); then
+    # Set the actual project the test cluster resides in
+    # It will be a project assigned by Boskos if test is running on Prow,
+    # otherwise will be ${E2E_GCP_PROJECT_ID} set up by user.
+    E2E_PROJECT_ID="$(gcloud config get-value project)"
+    export E2E_PROJECT_ID
+    readonly E2E_PROJECT_ID
 
-  # Safety checks
-  is_protected_gcr "${KO_DOCKER_REPO}" && \
-    abort "\$KO_DOCKER_REPO set to ${KO_DOCKER_REPO}, which is forbidden"
+    # Setup KO_DOCKER_REPO if it is a GKE cluster. Incorporate an element of
+    # randomness to ensure that each run properly publishes images. Don't
+    # owerwrite KO_DOCKER_REPO if already set.
+    [ -z "${KO_DOCKER_REPO}" ] && \
+      [[ "${k8s_cluster}" =~ ^gke_.* ]] && \
+      export KO_DOCKER_REPO=gcr.io/${E2E_PROJECT_ID}/${REPO_NAME}-e2e-img/${RANDOM}
+
+    # Safety checks
+    is_protected_gcr "${KO_DOCKER_REPO}" && \
+      abort "\$KO_DOCKER_REPO set to ${KO_DOCKER_REPO}, which is forbidden"
+  fi
 
   # Use default namespace for all subsequent kubectl commands in this context
   kubectl config set-context "${k8s_cluster}" --namespace=default
