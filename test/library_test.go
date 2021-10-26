@@ -1,3 +1,4 @@
+//go:build library
 // +build library
 
 /*
