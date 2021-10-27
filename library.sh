@@ -647,14 +647,14 @@ function update_licenses() {
   local dst=$1
   local dir=$2
   shift
-  run_go_tool github.com/google/go-licenses go-licenses save "${dir}" --save_path="${dst}" --force || \
+  run_go_tool github.com/google/go-licenses@latest go-licenses save "${dir}" --save_path="${dst}" --force || \
     { echo "--- FAIL: go-licenses failed to update licenses"; return 1; }
 }
 
 # Run go-licenses to check for forbidden licenses.
 function check_licenses() {
   # Check that we don't have any forbidden licenses.
-  run_go_tool github.com/google/go-licenses go-licenses check "${REPO_ROOT_DIR}/..." || \
+  run_go_tool github.com/google/go-licenses@latest go-licenses check "${REPO_ROOT_DIR}/..." || \
     { echo "--- FAIL: go-licenses failed the license check"; return 1; }
 }
 
