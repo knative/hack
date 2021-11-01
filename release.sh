@@ -131,10 +131,19 @@ function master_version() {
   echo "${tokens[0]}.${tokens[1]}"
 }
 
+# Return the minor version of a release.
+# For example, "v0.2.1" returns "2"
+# Parameters: $1 - release version label.
+function minor_version() {
+  local release="${1//v/}"
+  local tokens=(${release//\./ })
+  echo "${tokens[1]}"
+}
+
 # Return the release build number of a release.
 # For example, "v0.2.1" returns "1".
 # Parameters: $1 - release version label.
-function release_build_number() {
+function patch_version() {
   local tokens=(${1//\./ })
   echo "${tokens[2]}"
 }
@@ -254,7 +263,7 @@ function prepare_dot_release() {
     exit 0
   fi
   # Create new release version number
-  local last_build="$(release_build_number "${last_version}")"
+  local last_build="$(patch_version "${last_version}")"
   RELEASE_VERSION="${major_minor_version}.$(( last_build + 1 ))"
   echo "Will create release ${RELEASE_VERSION} at commit ${release_branch_commit}"
   # If --release-notes not used, copy from the latest release
@@ -616,6 +625,18 @@ function publish_to_github() {
   fi
   git tag -a "${github_tag}" -m "${title}"
   git_push tag "${github_tag}"
+
+  # Include a tag for the go module version
+  #
+  # v1.0.0 = v0.27.0
+  # v1.0.1 = v0.27.1
+  # v1.1.1 = v0.28.1
+  if [[ "$TAG" == "v1"* ]]; then
+    local release_minor=$(minor_version $TAG)
+    local go_module_version="0.$(( release_minor + 27 )).$(patch_version $TAG)"
+    git tag -a "${go_module_version}" -m "${title}"
+    git_push tag "${go_module_version}"
+  fi
 
   [[ -n "${RELEASE_BRANCH}" ]] && commitish="--commitish=${RELEASE_BRANCH}"
   for i in {2..0}; do
