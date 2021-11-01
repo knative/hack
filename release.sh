@@ -135,8 +135,7 @@ function master_version() {
 # For example, "v0.2.1" returns "2"
 # Parameters: $1 - release version label.
 function minor_version() {
-  local release="${1//v/}"
-  local tokens=(${release//\./ })
+  local tokens=(${1//\./ })
   echo "${tokens[1]}"
 }
 
@@ -631,6 +630,8 @@ function publish_to_github() {
   # v1.0.0 = v0.27.0
   # v1.0.1 = v0.27.1
   # v1.1.1 = v0.28.1
+  #
+  # See: https://github.com/knative/hack/pull/97
   if [[ "$TAG" == "v1"* ]]; then
     local release_minor=$(minor_version $TAG)
     local go_module_version="v0.$(( release_minor + 27 )).$(patch_version $TAG)"
