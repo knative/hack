@@ -633,7 +633,7 @@ function publish_to_github() {
   # v1.1.1 = v0.28.1
   if [[ "$TAG" == "v1"* ]]; then
     local release_minor=$(minor_version $TAG)
-    local go_module_version="0.$(( release_minor + 27 )).$(patch_version $TAG)"
+    local go_module_version="v0.$(( release_minor + 27 )).$(patch_version $TAG)"
     git tag -a "${go_module_version}" -m "${title}"
     git_push tag "${go_module_version}"
   fi
