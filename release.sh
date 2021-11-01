@@ -171,7 +171,10 @@ function prepare_auto_release() {
   PUBLISH_RELEASE=1
 
   git fetch --all || abort "error fetching branches/tags from remote"
-  local tags="$(git tag | cut -d 'v' -f2 | cut -d '.' -f1-2 | sort -V | uniq)"
+  # Support two different formats for tags
+  # - knative-v1.0.0
+  # - v1.0.0
+  local tags="$(git tag | cut -d '-' -f2 | cut -d 'v' -f2 | cut -d '.' -f1-2 | sort -V | uniq)"
   local branches="$( { (git branch -r | grep upstream/release-) ; (git branch | grep release-); } | cut -d '-' -f2 | sort -V | uniq)"
 
   echo "Versions released (from tags): [" "${tags}" "]"
@@ -210,7 +213,10 @@ function prepare_dot_release() {
   git fetch --all || abort "error fetching branches/tags from remote"
   # List latest release
   local releases # don't combine with the line below, or $? will be 0
-  releases="$(hub_tool release)"
+  # Support tags in two formats
+  # - knative-v1.0.0
+  # - v1.0.0
+  releases="$(hub_tool release | cut -d '-' -f2)"
   echo "Current releases are: ${releases}"
   [[ $? -eq 0 ]] || abort "cannot list releases"
   # If --release-branch passed, restrict to that release
@@ -234,7 +240,9 @@ function prepare_dot_release() {
   [[ -n "${major_minor_version}" ]] || abort "cannot get release major/minor version"
   # Ensure there are new commits in the branch, otherwise we don't create a new release
   setup_branch
-  local last_release_commit="$(git rev-list -n 1 "${last_version}")"
+  # Use the original tag (ie. potentially with a knative- prefix) when determining the last version commit sha
+  local github_tag="$(hub_tool release | grep "${last_version}")"
+  local last_release_commit="$(git rev-list -n 1 "${github_tag}")"
   local release_branch_commit="$(git rev-list -n 1 upstream/"${RELEASE_BRANCH}")"
   [[ -n "${last_release_commit}" ]] || abort "cannot get last release commit"
   [[ -n "${release_branch_commit}" ]] || abort "cannot get release branch last commit"
@@ -252,7 +260,7 @@ function prepare_dot_release() {
   # If --release-notes not used, copy from the latest release
   if [[ -z "${RELEASE_NOTES}" ]]; then
     RELEASE_NOTES="$(mktemp)"
-    hub_tool release show -f "%b" "${last_version}" > "${RELEASE_NOTES}"
+    hub_tool release show -f "%b" "${github_tag}" > "${RELEASE_NOTES}"
     echo "Release notes from ${last_version} copied to ${RELEASE_NOTES}"
   fi
 }
@@ -595,6 +603,8 @@ function publish_to_github() {
   local description="$(mktemp)"
   local attachments_dir="$(mktemp -d)"
   local commitish=""
+  local github_tag="knative-${TAG}"
+
   # Copy files to a separate dir
   for artifact in $@; do
     cp ${artifact} "${attachments_dir}"/
@@ -604,8 +614,8 @@ function publish_to_github() {
   if [[ -n "${RELEASE_NOTES}" ]]; then
     cat "${RELEASE_NOTES}" >> "${description}"
   fi
-  git tag -a "${TAG}" -m "${title}"
-  git_push tag "${TAG}"
+  git tag -a "${github_tag}" -m "${title}"
+  git_push tag "${github_tag}"
 
   [[ -n "${RELEASE_BRANCH}" ]] && commitish="--commitish=${RELEASE_BRANCH}"
   for i in {2..0}; do
@@ -613,7 +623,7 @@ function publish_to_github() {
         ${attachments[@]} \
         --file="${description}" \
         "${commitish}" \
-        "${TAG}" && return 0
+        "${github_tag}" && return 0
     if [[ "${i}" -gt 0 ]]; then
       echo "Error publishing the release, retrying in 15s..."
       sleep 15
