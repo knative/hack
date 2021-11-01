@@ -54,8 +54,8 @@ echo ">> Testing helper functions"
 
 test_function ${SUCCESS} "0.2" master_version "v0.2.1"
 test_function ${SUCCESS} "0.2" master_version "0.2.1"
-test_function ${SUCCESS} "1" release_build_number "v0.2.1"
-test_function ${SUCCESS} "1" release_build_number "0.2.1"
+test_function ${SUCCESS} "1" patch_version "v0.2.1"
+test_function ${SUCCESS} "1" patch_version "0.2.1"
 test_function ${SUCCESS} "deadbeef" hash_from_tag "v20010101-deadbeef"
 
 echo ">> Testing flag parsing"
