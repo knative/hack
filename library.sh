@@ -832,29 +832,26 @@ function shellcheck_new_files() {
 function latest_version() {
   local branch_name="$(current_branch)"
 
-  # Use the latest release for main
-  if [[ "$branch_name" == "main" ]] || [[ "$branch_name" == "master" ]]; then
+  if [ "$branch_name" = "master" ] || [ "$branch_name" = "main" ]; then
+    # For main branch, simply use git tag without major version, this will work even
+    # if the release tag is not in the main
     git tag -l "*$(git tag -l "*v[0-9]*" | cut -d '-' -f2 | sort -r --version-sort | head -n1)*"
-    return
-  fi
-
-  # Ideally we shouldn't need to treat release branches differently but
-  # there are scenarios where git describe will return newer tags than
-  # the ones on the current branch
-  #
-  # ie. create a PR pulling commits from 0.24 into a release-0.23 branch
-  if [[ "$branch_name" == "release-"* ]]; then
-    # Infer major, minor version from the branch name
-    local tag="${branch_name##release-}"
   else
-    # Nearest tag with the `knative-` prefix
-    local tag=$(git describe --abbrev=0 --match "knative-v[0-9]*")
+    ## Assumption here is we are on a release branch
+    local major_minor="${branch_name##release-}"
+    local major_version="$(major_version $major_minor)"
+    local minor_version="$(minor_version $major_minor)"
 
-    # Fallback to older tag scheme vX.Y.Z
-    [[ -z "${tag}" ]] && tag=$(git describe --abbrev=0 --match "v[0-9]*")
+    # Hardcode the jump back from 1.0
+    if [ "$major_version" = "1" ] && [ "$minor_version" == 0 ]; then
+      local tag='v0.26*'
+    else
+      # Adjust the minor down by one
+      local tag="*v$major_version.$(( minor_version - 1 ))*"
+    fi
 
-    # Drop the prefix
-    tag="${tag##knative-}"
+    # Get the latest patch release for the major minor
+    git tag -l "${tag}*" | sort -r --version-sort | head -n1
   fi
 
   local major_version="$(major_version ${tag})"
