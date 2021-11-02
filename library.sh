@@ -841,7 +841,7 @@ function latest_version() {
   if [ "$branch_name" = "master" ] || [ "$branch_name" = "main" ]; then
     # For main branch, simply use git tag without major version, this will work even
     # if the release tag is not in the main
-    git tag -l "*v[0-9]*" | cut -d '-' -f2 | sort -r --version-sort | head -n1
+    git tag -l "*$(git tag -l "*v[0-9]*" | cut -d '-' -f2 | sort -r --version-sort | head -n1)*"
   else
     ## Assumption here is we are on a release branch
     local major_minor="${branch_name##release-}"
