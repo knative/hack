@@ -567,7 +567,7 @@ function run_go_tool() {
   fi
   (( install_failed )) && return ${install_failed}
   shift 2
-  ${tool} "$@"
+  ${GOPATH}/bin/${tool} "$@"
 }
 
 # Add function call to trap
