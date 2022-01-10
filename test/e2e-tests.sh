@@ -23,7 +23,9 @@
 # Calling this script without arguments will create a new cluster in
 # project $PROJECT_ID, run the tests and delete the cluster.
 
-source $(dirname "${BASH_SOURCE[0]}")/../e2e-tests.sh
+set -Eeo pipefail
+
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
 
 function knative_setup() {
   start_latest_knative_serving
@@ -33,6 +35,8 @@ function knative_setup() {
 initialize "$@" --max-nodes=1 --machine=e2-standard-2 \
   --enable-workload-identity --cluster-version=latest \
   --extra-gcloud-flags "--enable-stackdriver-kubernetes --no-enable-ip-alias --no-enable-autoupgrade"
+
+set -Eeuo pipefail
 
 go_test_e2e ./test/e2e || fail_test
 

@@ -21,9 +21,11 @@
 # Use the flags --build-tests, --unit-tests and --integration-tests
 # to run a specific set of tests.
 
+set -Eeuo pipefail
+
 export GO111MODULE=on
 
-source $(dirname "${BASH_SOURCE[0]}")/../presubmit-tests.sh
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/../presubmit-tests.sh"
 
 # Run our custom build tests after the standard build tests.
 
