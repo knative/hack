@@ -139,7 +139,8 @@ CLOUD_PROVIDER="gke"
 # Parse flags and initialize the test cluster.
 function initialize() {
   local run_tests=0
-  local custom_flags=()
+  # We are disabling logs and metrics on Boskos Clusters as they are not used.
+  local custom_flags=("--logging=NONE --metrics=NONE --preemptible ")
   E2E_SCRIPT="$(get_canonical_path "$0")"
   local e2e_script_command=( "${E2E_SCRIPT}" "--run-tests" )
 
@@ -178,6 +179,7 @@ function initialize() {
 
   (( IS_PROW )) && [[ -z "${GCP_PROJECT_ID:-}" ]] && IS_BOSKOS=1
 
+  # We are disabling logs and metrics on Boskos Clusters as they are not used.
   if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
     if (( SKIP_ISTIO_ADDON )); then
       custom_flags+=("--addons=NodeLocalDNS")
