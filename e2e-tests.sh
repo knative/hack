@@ -139,8 +139,7 @@ CLOUD_PROVIDER="gke"
 # Parse flags and initialize the test cluster.
 function initialize() {
   local run_tests=0
-  # We are disabling logs and metrics on Boskos Clusters as they are not used.
-  local custom_flags=("--logging=NONE --metrics=NONE --preemptible ")
+  local custom_flags=()
   E2E_SCRIPT="$(get_canonical_path "$0")"
   local e2e_script_command=( "${E2E_SCRIPT}" "--run-tests" )
 

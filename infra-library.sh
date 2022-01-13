@@ -137,5 +137,6 @@ function create_gke_test_cluster() {
   local -n _custom_flags=$1
   local -n _test_command=$2
 
-  run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}"
+# We are disabling logs and metrics on Boskos Clusters as they are not used.
+  run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --metrics=NONE --preemptible"
 }
