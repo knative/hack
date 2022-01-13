@@ -179,7 +179,6 @@ function initialize() {
 
   (( IS_PROW )) && [[ -z "${GCP_PROJECT_ID:-}" ]] && IS_BOSKOS=1
 
-  # We are disabling logs and metrics on Boskos Clusters as they are not used.
   if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
     if (( SKIP_ISTIO_ADDON )); then
       custom_flags+=("--addons=NodeLocalDNS")
