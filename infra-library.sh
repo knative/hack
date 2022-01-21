@@ -142,6 +142,6 @@ function create_gke_test_cluster() {
   then
     run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--preemptible"
   else
-    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --metrics=NONE --preemptible"
+    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --monitoring=NONE --preemptible"
   fi
 }
