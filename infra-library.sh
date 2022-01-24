@@ -123,5 +123,10 @@ function create_gke_test_cluster() {
   local -n _custom_flags=$1
   local -n _test_command=$2
 
-  run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}"
+  # We are disabling logs and metrics on Boskos Clusters by default as they are not used. Manually set ENABLE_GKE_TELEMETRY to true to enable logging
+  if [[ "$ENABLE_GKE_TELEMETRY" == "true" ]]; then
+    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--preemptible"
+  else
+    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --monitoring=NONE --preemptible"
+  fi
 }
