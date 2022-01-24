@@ -77,20 +77,6 @@ function dump_cluster_state() {
   echo "***************************************"
 }
 
-# Sets the current user as cluster admin for the given cluster.
-# Parameters: $1 - cluster context name
-function acquire_cluster_admin_role() {
-  if [[ -z "$(kubectl get clusterrolebinding cluster-admin-binding 2> /dev/null)" ]]; then
-    if [[ "$1" =~ ^gke_.* ]]; then
-      kubectl create clusterrolebinding cluster-admin-binding \
-        --clusterrole=cluster-admin --user="$(gcloud config get-value core/account)"
-    else
-      kubectl create clusterrolebinding cluster-admin-binding \
-        --clusterrole=cluster-admin --user="prow"
-    fi
-  fi
-}
-
 # Create a test cluster and run the tests if provided.
 # Parameters: $1 - cluster provider name, e.g. gke
 #             $2 - custom flags supported by kntest
