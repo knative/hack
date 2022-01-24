@@ -46,13 +46,13 @@ func TestFails(t *testing.T) {
 func TestFailsWithFatal(t *testing.T) {
 	// Simulate a zap.Fatal() call.
 	fmt.Println("fatal\tTestFailsWithFatal\tsimple_test.go:999\tFailed with logger.Fatal()")
-	signal(os.Interrupt)
+	signal(os.Kill)
 }
 
 func TestFailsWithPanic(t *testing.T) {
 	// Simulate a "panic" stack trace.
 	fmt.Println("panic: test timed out after 5m0s")
-	signal(os.Interrupt)
+	signal(os.Kill)
 }
 
 func TestFailsWithSigQuit(t *testing.T) {
