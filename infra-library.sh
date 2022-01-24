@@ -123,9 +123,14 @@ function create_gke_test_cluster() {
   local -n _custom_flags=$1
   local -n _test_command=$2
 
-  # We are disabling logs and metrics on Boskos Clusters by default as they are not used. Manually set ENABLE_GKE_TELEMETRY to true to enable logging
-  if [[ "$ENABLE_GKE_TELEMETRY" == "true" ]]; then
+  # We are disabling logs and metrics on Boskos Clusters by default as they are not used. Manually set ENABLE_GKE_TELEMETRY to true to enable telemetry
+  # and DISABLE_PREEMPTIBLE_NODES to true to create normal VMs. VM Preemption is a rare event and shouldn't be distruptive given the fault tolerant nature of our tests.
+  if [[ "$ENABLE_GKE_TELEMETRY" == "true" && "$DISABLE_PREEMPTIBLE_NODES" == "true" ]]; then
+    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags=""
+  elif [[ "$ENABLE_GKE_TELEMETRY" == "true" && "$DISABLE_PREEMPTIBLE_NODES" != "true" ]]; then
     run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--preemptible"
+  elif [[ "$ENABLE_GKE_TELEMETRY" != "true" && "$DISABLE_PREEMPTIBLE_NODES" == "true" ]]; then
+    run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --monitoring=NONE"
   else
     run_kntest kubetest2 gke "${_custom_flags[@]}" --test-command="${_test_command[*]}" --extra-gcloud-flags="--logging=NONE --monitoring=NONE --preemptible"
   fi
