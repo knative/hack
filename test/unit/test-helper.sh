@@ -26,11 +26,12 @@ readonly FAILURE=1
 function test_function() {
   local expected_retcode=$1
   local expected_string=$2
-  local output="$(mktemp)"
-  local output_code="$(mktemp)"
+  local output output_code retcode
+  output="$(mktemp)"
+  output_code="$(mktemp)"
   shift 2
-  echo -n "$(trap '{ echo $? > ${output_code}; }' EXIT ; "$@")" &> ${output}
-  local retcode=$(cat ${output_code})
+  echo -n "$(trap '{ echo $? > ${output_code}; }' EXIT ; "$@")" &> "${output}"
+  retcode=$(cat "${output_code}")
   if [[ ${retcode} -ne ${expected_retcode} ]]; then
     cat ${output}
     echo "Return code ${retcode} doesn't match expected return code ${expected_retcode}"
