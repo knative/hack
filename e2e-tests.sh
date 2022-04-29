@@ -152,7 +152,12 @@ function initialize() {
         # Skip parsed flag (and possibly argument) and continue
         # Also save it to it's passed through to the test script
         for ((i=1;i<=skip;i++)); do
-          e2e_script_command+=("$1")
+          case "$1" in
+            # Don't need to pass enable-ha to the test script
+            # For details, see https://github.com/knative/serving/issues/12788
+            --enable-ha) : ;;
+            *) e2e_script_command+=("$1") ;;
+          esac
           shift
         done
         continue
