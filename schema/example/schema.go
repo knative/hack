@@ -56,6 +56,9 @@ type LoremIpsumSpec struct {
 	// Bbb is the second way.
 	Bbb LoremSpec `json:"bbb,omitempty"`
 
+	// Ccc is the third way.
+	Ccc []byte `json:"ccc,omitempty"`
+
 	// VerboseTypes shows an example of a ton of types.
 	VerboseTypes VerboseTypes `json:"verboseTypes"`
 }
