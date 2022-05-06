@@ -126,6 +126,12 @@ func generateSchema(t reflect.Type, history ...reflect.Type) JSONSchemaProps {
 	case reflect.Ptr:
 		return generateSchema(t.Elem(), history...)
 	case reflect.Slice:
+		// Model []byte as string
+		if t.Elem().Kind() == reflect.Uint8 {
+			return JSONSchemaProps{
+				Type: "string",
+			}
+		}
 		s := generateSliceSchema(t)
 		return s
 	case reflect.String:

@@ -73,6 +73,9 @@ func Example_kindLoremIpsum() {
 	//           praesent:
 	//             description: Praesent pulvinar consectetur enim. Aenean lobortis, eros quis molestie euismod, nisl nunc mattis quam, et gravida risus diam at nulla. Donec interdum, tortor a semper tincidunt, nibh odio euismod orci, rhoncus rhoncus purus lacus pharetra mi. Suspendisse placerat dignissim magna convallis dictum. Nulla facilisi. Vivamus sed tristique turpis.
 	//             type: string
+	//       ccc:
+	//         description: Ccc is the third way.
+	//         type: string
 	//       maecenas:
 	//         description: Maecenas tristique lobortis turpis, nec varius mauris vestibulum nec. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus non dapibus magna.
 	//         type: string
