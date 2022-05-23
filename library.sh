@@ -61,6 +61,8 @@ if [[ -z "${ARTIFACTS:-}" ]]; then
   export ARTIFACTS="$(mktemp -d)"
 fi
 
+export GOVERSION="${GOVERSION:-1.17}"
+
 # On a Prow job, redirect stderr to stdout so it's synchronously added to log
 (( IS_PROW )) && exec 2>&1
 
@@ -631,6 +633,9 @@ function go_update_deps() {
       echo "Nothing to upgrade."
     fi
   fi
+
+  group "Set Go version"
+  go mod edit -go=${GOVERSION}
 
   group "Go mod tidy and vendor"
 
