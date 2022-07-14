@@ -632,31 +632,13 @@ function go_update_deps() {
     fi
   fi
 
-  group "Go mod tidy and vendor"
+  group "Go mod tidy"
 
   # Prune modules.
   local orig_pipefail_opt=$(shopt -p -o pipefail)
   set -o pipefail
   go mod tidy 2>&1 | grep -v "ignoring symlink" || true
-  go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
   eval "$orig_pipefail_opt"
-
-  group "Removing unwanted vendor files"
-
-  # Remove unwanted vendor files
-  find vendor/ \( -name "OWNERS" \
-    -o -name "OWNERS_ALIASES" \
-    -o -name "BUILD" \
-    -o -name "BUILD.bazel" \
-    -o -name "*_test.go" \) -exec rm -f {} +
-
-  export GOFLAGS=-mod=vendor
-
-  group "Updating licenses"
-  update_licenses third_party/VENDOR-LICENSE "./..."
-
-  group "Removing broken symlinks"
-  remove_broken_symlinks ./vendor
 }
 
 # Return the go module name of the current module.
