@@ -100,6 +100,7 @@ VALIDATION_TESTS="./test/presubmit-tests.sh"
 ARTIFACTS_TO_PUBLISH=""
 FROM_NIGHTLY_RELEASE=""
 FROM_NIGHTLY_RELEASE_GCS=""
+SIGNING_KEY=""
 export KO_DOCKER_REPO="gcr.io/knative-nightly"
 # Build stripped binary to reduce size
 export GOFLAGS="-ldflags=-s -ldflags=-w"
@@ -301,6 +302,31 @@ function build_from_source() {
   if [[ $? -ne 0 ]]; then
     abort "error building the release"
   fi
+  sign_release
+  # Do not use `||` above or any error will be swallowed.
+  if [[ $? -ne 0 ]]; then
+    abort "error signing the release"
+  fi
+}
+
+# Build a release from source.
+function sign_release() {
+  ## Sign the images with cosign
+  ## For now, check if ko has created imagerefs.txt file. In the future, missing image refs will break
+  ## the release for all jobs that publish images.
+  if [[ -f "imagerefs.txt"  && -z ${SIGNING_KEY} ]]; then
+      echo "Signing Images with the key ${SIGNING_KEY}"
+      COSIGN_EXPERIMENTAL=1 cosign sign $(cat image.refs) --key gcpkms://"${SIGNING_KEY}"
+      cosign public-key --key gcpkms://"${SIGNING_KEY}" > cosign.pub
+      gsutil -m cp cosign.pub "gs://${RELEASE_GCS_BUCKET}/cosign.pub"
+  fi
+  
+  ## Check if there is checksums.txt file. If so, sign the checksum file
+  if [[ -f "checksums.txt"  && -z ${SIGNING_KEY} ]]; then
+      echo "Signing checksums with the key ${SIGNING_KEY}"
+      COSIGN_EXPERIMENTAL=1 cosign sign-blob checksums.txt --key gcpkms://"${SIGNING_KEY}" --output-signature checksums.txt.sig --output-certificate checksums.txt.pem
+      ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH} checksums.txt.sig checksums.txt.pem"
+  fi
 }
 
 # Copy tagged images from the nightly GCR to the release GCR, tagging them 'latest'.
@@ -403,6 +429,10 @@ function parse_flags() {
             [[ $1 =~ ^v[0-9]+-[0-9a-f]+$ ]] || abort "nightly tag must be 'vYYYYMMDD-commithash'"
             FROM_NIGHTLY_RELEASE=$1
             ;;
+          --signing-key)
+            [[ $1 =~ ^projects\/[a-zA-Z0-9-]+\/locations\/[a-zA-Z0-9-]+\/keyRings\/[a-zA-Z0-9-]+\/cryptoKeys\/[a-zA-Z0-9-]+$ ]] || abort "signing key must be 'projects/[PROJECT_ID]/locations/[LOCATION]/keyRings/[KEYRING]/cryptoKeys/[CRYPTOKEY]'"
+            SIGNING_KEY=$1
+            ;;
           *) abort "unknown option ${parameter}" ;;
         esac
     esac
@@ -481,6 +511,7 @@ function parse_flags() {
   readonly RELEASE_DIR
   readonly VALIDATION_TESTS
   readonly FROM_NIGHTLY_RELEASE
+  readonly SIGNING_KEY
 }
 
 # Run tests (unless --skip-tests was passed). Conveniently displays a banner indicating so.
