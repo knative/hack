@@ -33,15 +33,7 @@ function init_test_env() {
     echo "foobar.go"
   }
 
-  function markdown-link-check() {
-    return 0
-  }
-
   function mdl() {
-    return 0
-  }
-
-  function check_links_in_markdown() {
     return 0
   }
 
