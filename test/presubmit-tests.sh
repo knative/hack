@@ -24,6 +24,7 @@
 set -Eeuo pipefail
 
 export GO111MODULE=on
+export REPO_NAME=hack
 
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/../presubmit-tests.sh"
 
@@ -44,9 +45,11 @@ function post_unit_tests() {
   local failed=0
   for test in ./test/unit/*-tests.sh; do
     subheader "Running tests in ${test}"
-    ${test} || { failed=1; echo "--- FAIL: ${test}"; }
+    ${test} || { failed=$?; echo "--- FAIL: ${test}"; }
+    if (( failed )); then
+      return ${failed}
+    fi
   done
-  return ${failed}
 }
 
 # We use the default integration test runner.

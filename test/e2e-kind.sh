@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname "${BASH_SOURCE[0]}")/../e2e-tests.sh
+set -Eeo pipefail
+
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
 
 function knative_setup() {
   start_latest_knative_serving
