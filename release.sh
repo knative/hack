@@ -302,11 +302,7 @@ function build_from_source() {
   if [[ $? -ne 0 ]]; then
     abort "error building the release"
   fi
-  sign_release
-  # Do not use `||` above or any error will be swallowed.
-  if [[ $? -ne 0 ]]; then
-    abort "error signing the release"
-  fi
+  sign_release || abort "error signing the release"
 }
 
 # Build a release from source.
@@ -316,7 +312,7 @@ function sign_release() {
   ## the release for all jobs that publish images.
   if [[ -f "imagerefs.txt"  && -z ${SIGNING_KEY} ]]; then
       echo "Signing Images with the key ${SIGNING_KEY}"
-      COSIGN_EXPERIMENTAL=1 cosign sign $(cat image.refs) --key gcpkms://"${SIGNING_KEY}"
+      COSIGN_EXPERIMENTAL=1 cosign sign $(cat imagerefs.txt) --key gcpkms://"${SIGNING_KEY}"
       cosign public-key --key gcpkms://"${SIGNING_KEY}" > cosign.pub
       gsutil -m cp cosign.pub "gs://${RELEASE_GCS_BUCKET}/cosign.pub"
   fi
