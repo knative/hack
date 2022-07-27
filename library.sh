@@ -97,7 +97,7 @@ function patch_version() {
 # Print error message and exit 1
 # Parameters: $1..$n - error message to be displayed
 function abort() {
-  echo "error: $*"
+  echo "error: $*" >&2
   exit 1
 }
 
@@ -126,7 +126,7 @@ function subheader() {
 
 # Simple warning banner for logging purposes.
 function warning() {
-  make_banner "!" "$1"
+  echo "!!! $@" >&2
 }
 
 # Checks whether the given function exists.
@@ -567,7 +567,6 @@ function go_run() {
   export GORUN_PATH
   GOPATH="${GORUN_PATH}" \
   GOFLAGS='' \
-  GO111MODULE='' \
     go run "$package" "$@"
 }
 
@@ -577,6 +576,7 @@ function go_run() {
 #             $3..$n - parameters passed to the tool.
 # Deprecated: use go_run instead
 function run_go_tool() {
+  warning 'The "run_go_tool" function is deprecated. Use "go_run" instead.'
   local package=$1
   # If no `@version` is provided, default to adding `@latest`
   if [[ "$package" != *@* ]]; then
@@ -613,14 +613,24 @@ function add_trap {
 # global env var: FLOATING_DEPS
 # --upgrade will set GOPROXY to direct unless it is already set.
 function go_update_deps() {
-  cd "${REPO_ROOT_DIR}" || return 1
+  local gomod_filepath gomod_dir
+  while read -r gomod_filepath; do
+    gomod_dir="$(dirname "$gomod_filepath")"
+    pushd "$gomod_dir" > /dev/null
+    __go_update_deps_for_module "$@"
+    popd > /dev/null
+  done < <(find . -name go.mod -type f)
+}
 
-  export GO111MODULE=on
+function __go_update_deps_for_module() {
+  ( # do not modify the environment
+  set -Eeuo pipefail
+
   export GOFLAGS=""
   export GONOSUMDB="${GONOSUMDB:-},knative.dev/*"
   export GONOPROXY="${GONOPROXY:-},knative.dev/*"
 
-  echo "=== Update Deps for Golang"
+  echo "=== Update Deps for Golang module: $(go list -m)"
 
   local UPGRADE=0
   local RELEASE="v9000.1" # release v9000 is so far in the future, it will always pick the default branch.
@@ -664,6 +674,9 @@ function go_update_deps() {
   go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
   eval "$orig_pipefail_opt"
 
+  if ! [ -d vendor ]; then
+    return 0
+  fi
   group "Removing unwanted vendor files"
 
   # Remove unwanted vendor files
@@ -679,7 +692,8 @@ function go_update_deps() {
   update_licenses third_party/VENDOR-LICENSE "./..."
 
   group "Removing broken symlinks"
-  remove_broken_symlinks ./vendor
+  remove_broken_symlinks vendor
+  )
 }
 
 # Return the go module name of the current module.
@@ -717,7 +731,6 @@ function run_kntest() {
 # Parameters: $1 - output file, relative to repo root dir.
 #             $2 - directory to inspect.
 function update_licenses() {
-  cd "${REPO_ROOT_DIR}" || return 1
   local dst=$1
   local dir=$2
   shift
@@ -762,7 +775,7 @@ function is_protected_project() {
 # Remove symlinks in a path that are broken or lead outside the repo.
 # Parameters: $1 - path name, e.g. vendor
 function remove_broken_symlinks() {
-  for link in $(find $1 -type l); do
+  for link in $(find "$1" -type l); do
     # Remove broken symlinks
     if [[ ! -e ${link} ]]; then
       unlink ${link}

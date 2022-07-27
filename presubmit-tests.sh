@@ -140,10 +140,15 @@ function default_build_test_runner() {
   subheader "Checking that go code builds"
   # Get all build tags in go code (ignore /vendor, /hack and /third_party)
   local tags
-  tags="$(find . \
-    -path './vendor' -prune -o -path './hack' -prune -o -path './third_party' -prune \
-    -o -type f -name '*.go' -exec grep '// +build' {} + \
-    | cut -f3 -d' ' | tr ',' '\n' | uniq | sort | tr '\n' ' ')"
+  tags="$(grep -I  -r '// +build' . | \
+    grep -v '/vendor/' | \
+    grep -v '/hack/' | \
+    grep -v '/third_party' | \
+    cut -f3 -d' ' | \
+    tr ',' '\n' | \
+    sort | uniq | \
+    grep -v '^!' | \
+    tr '\n' ' ')"
   report_build_test Build_Go \
     go test -vet=off -tags "${tags}" -exec echo ./... || failed=2
 
