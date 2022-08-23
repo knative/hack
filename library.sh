@@ -630,7 +630,7 @@ function __go_update_deps_for_module() {
   export GONOSUMDB="${GONOSUMDB:-},knative.dev/*"
   export GONOPROXY="${GONOPROXY:-},knative.dev/*"
 
-  echo "=== Update Deps for Golang module: $(go list -m)"
+  echo "=== Update Deps for Golang module: $(go_mod_module_name)"
 
   local UPGRADE=0
   local RELEASE="v9000.1" # release v9000 is so far in the future, it will always pick the default branch.
@@ -696,11 +696,12 @@ function __go_update_deps_for_module() {
   )
 }
 
+
 # Return the go module name of the current module.
 # Intended to be used like:
 #   export MODULE_NAME=$(go_mod_module_name)
 function go_mod_module_name() {
-  go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1
+  grep module go.mod | cut -d' ' -f2
 }
 
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
@@ -734,7 +735,7 @@ function update_licenses() {
   local dst=$1
   local dir=$2
   shift
-  go_run github.com/google/go-licenses@v1.2.0 \
+  go_run github.com/google/go-licenses@v1.2.1 \
     save "${dir}" --save_path="${dst}" --force || \
     { echo "--- FAIL: go-licenses failed to update licenses"; return 1; }
 }
@@ -742,7 +743,7 @@ function update_licenses() {
 # Run go-licenses to check for forbidden licenses.
 function check_licenses() {
   # Check that we don't have any forbidden licenses.
-  go_run github.com/google/go-licenses@v1.2.0 \
+  go_run github.com/google/go-licenses@v1.2.1 \
     check "${REPO_ROOT_DIR}/..." || \
     { echo "--- FAIL: go-licenses failed the license check"; return 1; }
 }
