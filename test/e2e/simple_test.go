@@ -1,8 +1,5 @@
-//go:build e2e
-// +build e2e
-
 /*
-Copyright 2019 The Knative Authors
+Copyright 2022 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,9 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// This is actually a unit test, but it does exercise the necessary helper functions.
-
-func TestE2ESucceeds(t *testing.T) {
+func TestSucceeds(t *testing.T) {
 	// Always succeed.
-	require.Equal(t, "TestE2ESucceeds", t.Name())
+	require.Equal(t, "TestSucceeds", t.Name())
 }

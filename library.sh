@@ -601,6 +601,26 @@ function add_trap {
   done
 }
 
+# Run a command, described by $1, for every go module in the project.
+# Parameters: $1      - Description of the command being run,
+#             $2 - $n - Arguments to pass to the command.
+function foreach_go_module() {
+  local failed=0
+  local -r cmd="$1"
+  shift
+  local gomod_filepath gomod_dir
+  while read -r gomod_filepath; do
+    gomod_dir="$(dirname "$gomod_filepath")"
+    pushd "$gomod_dir" > /dev/null
+    "$cmd" "$@" || failed=$?
+    popd > /dev/null
+    if (( failed )); then
+      echo "Command '${cmd}' failed in module $gomod_dir: $failed" >&2
+      return $failed
+    fi
+  done < <(find . -name go.mod -type f)
+}
+
 # Update go deps.
 # Parameters (parsed as flags):
 #   "--upgrade", bool, do upgrade.
@@ -613,13 +633,7 @@ function add_trap {
 # global env var: FLOATING_DEPS
 # --upgrade will set GOPROXY to direct unless it is already set.
 function go_update_deps() {
-  local gomod_filepath gomod_dir
-  while read -r gomod_filepath; do
-    gomod_dir="$(dirname "$gomod_filepath")"
-    pushd "$gomod_dir" > /dev/null
-    __go_update_deps_for_module "$@"
-    popd > /dev/null
-  done < <(find . -name go.mod -type f)
+  foreach_go_module __go_update_deps_for_module "$@"
 }
 
 function __go_update_deps_for_module() {

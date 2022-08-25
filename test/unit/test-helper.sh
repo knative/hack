@@ -30,7 +30,11 @@ function test_function() {
   output="$(mktemp)"
   output_code="$(mktemp)"
   shift 2
-  echo -n "$(trap '{ echo $? > ${output_code}; }' EXIT ; "$@")" &> "${output}"
+  (
+    set +e
+    ("$@" > "${output}" 2>&1)
+    echo "$?" > "${output_code}"
+  )
   retcode=$(cat "${output_code}")
   if [[ ${retcode} -ne ${expected_retcode} ]]; then
     cat ${output}
@@ -39,7 +43,7 @@ function test_function() {
   fi
   if [[ -n "${expected_string}" ]]; then
     local found=1
-    grep "${expected_string}" ${output} > /dev/null || found=0
+    grep -q "${expected_string}" ${output} || found=0
     if (( ! found )); then
       cat ${output}
       echo "String '${expected_string}' not found"
