@@ -27,6 +27,7 @@ function test_function() {
   local expected_retcode=$1
   local expected_string=$2
   local output output_code retcode
+  echo -n 'TEST '
   output="$(mktemp)"
   output_code="$(mktemp)"
   shift 2
@@ -38,7 +39,7 @@ function test_function() {
   retcode=$(cat "${output_code}")
   if [[ ${retcode} -ne ${expected_retcode} ]]; then
     cat ${output}
-    echo "Return code ${retcode} doesn't match expected return code ${expected_retcode}"
+    echo "FAIL: Return code ${retcode} doesn't match expected return code ${expected_retcode}"
     return 1
   fi
   if [[ -n "${expected_string}" ]]; then
@@ -46,18 +47,18 @@ function test_function() {
     grep -q "${expected_string}" ${output} || found=0
     if (( ! found )); then
       cat ${output}
-      echo "String '${expected_string}' not found"
+      echo "FAIL: String '${expected_string}' not found"
       return 1
     fi
   else
     if [[ -s ${output} ]]; then
       ls ${output}
       cat ${output}
-      echo "Unexpected output"
+      echo "FAIL: Unexpected output"
       return 1
     fi
   fi
-  echo "'$@' returns code ${expected_retcode} and output matches with expected"
+  echo "PASS: '$*' returns code ${expected_retcode} and output contains '${expected_string}'"
 }
 
 # Test helper that calls two functions in sequence.

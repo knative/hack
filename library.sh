@@ -670,7 +670,7 @@ function __go_update_deps_for_module() {
     else
       group "Upgrading to release ${RELEASE}"
     fi
-    FLOATING_DEPS+=( $(go_run knative.dev/test-infra/buoy@latest float ${REPO_ROOT_DIR}/go.mod "${buoyArgs[@]}") )
+    FLOATING_DEPS+=( $(go_run knative.dev/test-infra/buoy@latest float ./go.mod "${buoyArgs[@]}") )
     if [[ ${#FLOATING_DEPS[@]} > 0 ]]; then
       echo "Floating deps to ${FLOATING_DEPS[@]}"
       go get -d ${FLOATING_DEPS[@]}
