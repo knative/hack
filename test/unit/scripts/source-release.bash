@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2018 The Knative Authors
+# Copyright 2022 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname "$0")/../../e2e-tests.sh
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/../../release.sh"
 
-function parse_flags() {
-  if [[ "$1" == "--smoke-test-custom-flag" ]]; then
-    echo ">> All tests passed"
-    exit 0
-  fi
-  fail_test "Unexpected flag $1 passed"
+function build_release() {
+  return 0
 }
-
-echo ">> Testing e2e custom flags"
-
-initialize --smoke-test-custom-flag
