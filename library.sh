@@ -126,7 +126,7 @@ function subheader() {
 
 # Simple warning banner for logging purposes.
 function warning() {
-  echo "!!! $@" >&2
+  make_banner '!' "$*" >&2
 }
 
 # Checks whether the given function exists.
@@ -706,7 +706,7 @@ function __go_update_deps_for_module() {
   update_licenses third_party/VENDOR-LICENSE "./..."
 
   group "Removing broken symlinks"
-  remove_broken_symlinks vendor
+  remove_broken_symlinks ./vendor
   )
 }
 
