@@ -31,7 +31,7 @@ function test_report() {
     fi
     echo "Test report contains '$1'"
   }
-  ARTIFACTS=/tmp
+  ARTIFACTS="$(mktemp -d)"
   report_go_test -tags=library -run $1 ./test > ${REPORT} || true
   grepit "$2"
   grepit "XML report written"

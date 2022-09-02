@@ -23,7 +23,6 @@
 
 set -Eeuo pipefail
 
-export GO111MODULE=on
 export REPO_NAME=hack
 
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/../presubmit-tests.sh"

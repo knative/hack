@@ -237,9 +237,7 @@ function run_markdown_build_tests() {
 
 function run_main() {
   init_test_env
-  # Keep current EXIT trap, used by `test_function`
-  local current_trap="$(trap -p EXIT | cut -d\' -f2)"
-  trap -- "${current_trap};check_results" EXIT
+  trap -- "check_results" EXIT
   main
 }
 
