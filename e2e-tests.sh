@@ -126,7 +126,7 @@ function fail_test() {
   if [[ -n ${message:-} ]]; then
     message='test failed'
   fi
-  trap "dump_cluster_state;dump_metrics" EXIT
+  add_trap "dump_cluster_state;dump_metrics" EXIT
   abort "${message}"
 }
 

@@ -8,8 +8,11 @@ import (
 func TestReportGoTest(t *testing.T) {
 	tmpdir := t.TempDir()
 	sc := newShellScript(
+		instructions(
+			fmt.Sprintf(`export TMPDIR="%s/"`, tmpdir),
+			fmt.Sprintf(`export ARTIFACTS="%s/"`, tmpdir),
+		),
 		loadFile("source-library.bash", "fake-prow-job.bash"),
-		instructions(fmt.Sprintf(`export ARTIFACTS="%s"`, tmpdir)),
 	)
 	logChecks := []check{
 		contains("Finished run, return code is 1"),

@@ -31,10 +31,15 @@ func aborted(msg string) []check {
 
 func makeBanner(ch rune, msg string) string {
 	const span = 4
-	return fmt.Sprintf("%s\n%s\n%s\n",
-		strings.Repeat(string(ch), len(msg)+span*2+2),
-		strings.Repeat(string(ch), span)+" "+msg+" "+strings.Repeat(string(ch), span),
-		strings.Repeat(string(ch), len(msg)+span*2+2))
+	border := strings.Repeat(string(ch), len(msg)+span*2+2)
+	side := strings.Repeat(string(ch), span)
+	return strings.Join([]string{
+		border,
+		side + " " + msg + " " + side,
+		border,
+		side + " 2018-07-18 23:00:00.000000000+00:00",
+		border,
+	}, "\n") + "\n"
 }
 
 func empty() []check {
@@ -125,7 +130,11 @@ func (tc testCase) validRetcode(t TestingT, gotRetcode int) {
 type scriptlet func(t TestingT) string
 
 func newShellScript(scriptlets ...scriptlet) shellScript {
-	return shellScript{scriptlets}
+	return shellScript{
+		append(scriptlets, mockBinary("date", map[string]string{
+			"": "2018-07-18 23:00:00.000000000+00:00",
+		})),
+	}
 }
 
 type shellScript struct {
@@ -232,7 +241,8 @@ func (s shellScript) source(t TestingT, commands []string) string {
 	source := fmt.Sprintf(`
 set -Eeuo pipefail
 export TMPPATH='%s'
-export PATH="${TMPPATH}:${PATH}"`, t.TempDir())
+export PATH="${TMPPATH}:${PATH}"
+`, t.TempDir())
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
 		source += strings.TrimPrefix(sclet(t), bashShebang)
