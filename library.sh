@@ -668,7 +668,7 @@ function foreach_go_module() {
       echo "Command '${cmd}' failed in module $gomod_dir: $failed" >&2
       return $failed
     fi
-  done < <(find . -name go.mod -type f)
+  done < <(find . -name go.mod -type f ! -path "*/vendor/*" ! -path "*/third_party/*")
 }
 
 # Update go deps.
@@ -765,7 +765,7 @@ function __go_update_deps_for_module() {
 # Intended to be used like:
 #   export MODULE_NAME=$(go_mod_module_name)
 function go_mod_module_name() {
-  grep module go.mod | cut -d' ' -f2
+  grep -E '^module ' go.mod | cut -d' ' -f2
 }
 
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
