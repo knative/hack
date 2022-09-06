@@ -13,8 +13,12 @@ func TestMainFunc(t *testing.T) {
 	t.Parallel()
 	rootDir := path.Dir(path.Dir(currentDir()))
 	sc := newShellScript(
-		loadFile("source-presubmit-tests.bash"),
+		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
 		mockGo(),
+		mockGcloud(),
+		mockKubectl(map[string]string{}),
+		mockBinary("java", map[string]string{}),
+		mockBinary("mvn", map[string]string{}),
 	)
 	tcs := []testCase{{
 		name: `main --build-tests`,
@@ -116,6 +120,10 @@ func TestCustomAndMultiScript(t *testing.T) {
 	sc := newShellScript(
 		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
 		mockGo(),
+		mockGcloud(),
+		mockKubectl(map[string]string{}),
+		mockBinary("java", map[string]string{}),
+		mockBinary("mvn", map[string]string{}),
 	)
 	tcs := []testCase{{
 		name:     `main --run-test "echo rng"`,

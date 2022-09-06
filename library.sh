@@ -77,10 +77,6 @@ if [[ -z "${ARTIFACTS:-}" ]]; then
 fi
 mkdir -p "$ARTIFACTS"
 
-
-# On a Prow job, redirect stderr to stdout so it's synchronously added to log
-(( IS_PROW )) && exec 2>&1
-
 # Return the major version of a release.
 # For example, "v0.2.1" returns "0"
 # Parameters: $1 - release version label.
