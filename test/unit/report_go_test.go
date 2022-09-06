@@ -1,50 +1,46 @@
 package unit_test
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestReportGoTest(t *testing.T) {
-	sc := newShellScript(loadFile(
-		"source-library.bash",
-		"fake-prow-job.bash",
-	))
+	tmpdir := t.TempDir()
+	sc := newShellScript(
+		loadFile("source-library.bash", "fake-prow-job.bash"),
+		instructions(fmt.Sprintf(`export ARTIFACTS="%s"`, tmpdir)),
+	)
+	logChecks := []check{
+		contains("Finished run, return code is 1"),
+		contains(fmt.Sprintf("XML report written to %s", tmpdir)),
+		contains(fmt.Sprintf("Test log (JSONL) written to %s", tmpdir)),
+		contains(fmt.Sprintf("Test log (ANSI) written to %s", tmpdir)),
+		contains(fmt.Sprintf("Test log (HTML) written to %s", tmpdir)),
+	}
 	tcs := []testCase{{
 		name: `report_go_test -tags=library -run TestFailsWithFatal ./test`,
-		stdout: []check{
+		stdout: append([]check{
 			contains("=== RUN   TestFailsWithFatal"),
 			contains("fatal\tTestFailsWithFatal\tlibrary_test.go:48\tFailed with logger.Fatal()"),
 			contains("FAIL test.TestFailsWithFatal"),
-			contains("Finished run, return code is 1"),
-			contains("XML report written"),
-			contains("Test log (JSONL) written to"),
-			contains("Test log (ANSI) written to"),
-			contains("Test log (HTML) written to"),
-		},
+		}, logChecks...),
 		stderr: lines("exit status 1"),
 	}, {
 		name: `report_go_test -tags=library -run TestFailsWithPanic ./test`,
-		stdout: []check{
+		stdout: append([]check{
 			contains("=== RUN   TestFailsWithPanic"),
 			contains("panic: test timed out after 5m0s"),
 			contains("FAIL test.TestFailsWithPanic"),
-			contains("Finished run, return code is 1"),
-			contains("XML report written"),
-			contains("Test log (JSONL) written to"),
-			contains("Test log (ANSI) written to"),
-			contains("Test log (HTML) written to"),
-		},
+		}, logChecks...),
 		stderr: lines("exit status 1"),
 	}, {
 		name: `report_go_test -tags=library -run TestFailsWithSigQuit ./test`,
-		stdout: []check{
+		stdout: append([]check{
 			contains("=== RUN   TestFailsWithSigQuit"),
 			contains("SIGQUIT: quit"),
 			contains("FAIL test.TestFailsWithSigQuit"),
-			contains("Finished run, return code is 1"),
-			contains("XML report written"),
-			contains("Test log (JSONL) written to"),
-			contains("Test log (ANSI) written to"),
-			contains("Test log (HTML) written to"),
-		},
+		}, logChecks...),
 		stderr: lines("exit status 1"),
 	}}
 	for _, tc := range tcs {

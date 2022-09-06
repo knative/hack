@@ -151,6 +151,12 @@ func loadFile(names ...string) scriptlet {
 	}
 }
 
+func instructions(inst ...string) scriptlet {
+	return func(t TestingT) string {
+		return strings.Join(inst, "\n")
+	}
+}
+
 func mockBinary(name string, responses map[string]string) scriptlet {
 	return func(t TestingT) string {
 		code := make([]string, 0, len(responses)*10)
