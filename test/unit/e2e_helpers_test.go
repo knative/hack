@@ -5,6 +5,7 @@ import "testing"
 func TestE2eHelpers(t *testing.T) {
 	t.Parallel()
 	sc := newShellScript(loadFile(
+		"fake-prow-job.bash",
 		"source-e2e-tests.bash",
 		"smoke-test-custom-flag.bash",
 		"fake-dumps.bash",

@@ -11,7 +11,7 @@ import (
 
 func TestReleaseHelperFunctions(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `major_minor_version "v0.2.1"`,
 		stdout: lines("0.2"),
@@ -36,7 +36,7 @@ func TestReleaseHelperFunctions(t *testing.T) {
 
 func TestReleaseFlagParsingVersion(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --version`,
 		stderr: aborted("missing parameter after --version"),
@@ -58,7 +58,7 @@ func TestReleaseFlagParsingVersion(t *testing.T) {
 
 func TestReleaseFlagParsingBranch(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --branch`,
 		stderr: aborted("missing parameter after --branch"),
@@ -80,7 +80,7 @@ func TestReleaseFlagParsingBranch(t *testing.T) {
 
 func TestReleaseFlagParsingReleaseNotes(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tmpfile := t.TempDir() + "/release-notes.md"
 	err := os.WriteFile(tmpfile,
 		[]byte("# Release Notes\n\n## 1.0.0\n\n* First release\n"),
@@ -105,7 +105,7 @@ func TestReleaseFlagParsingReleaseNotes(t *testing.T) {
 
 func TestReleaseFlagParsingReleaseGcsGcr(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --release-gcs`,
 		stderr: aborted("missing parameter after --release-gcs"),
@@ -127,7 +127,7 @@ func TestReleaseFlagParsingReleaseGcsGcr(t *testing.T) {
 
 func TestReleaseFlagParsingReleaseConstraints(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --dot-release --auto-release`,
 		stderr: aborted("cannot have both --dot-release and --auto-release set simultaneously"),
@@ -149,7 +149,7 @@ func TestReleaseFlagParsingReleaseConstraints(t *testing.T) {
 
 func TestReleaseFlagParsingNightly(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --from-nightly`,
 		stderr: aborted("missing parameter after --from-nightly"),
@@ -169,7 +169,7 @@ func TestReleaseFlagParsingGithubToken(t *testing.T) {
 	token := rand.String(12)
 	err := os.WriteFile(tmpfile, []byte(token+"\n"), 0o600)
 	require.NoError(t, err)
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --github-token`,
 		stderr: aborted("missing parameter after --github-token"),
@@ -189,7 +189,7 @@ func TestReleaseFlagParsingGithubToken(t *testing.T) {
 
 func TestReleaseFlagParsingGcsGcrIgnoredValues(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name:   `parse_flags --release-gcs foo`,
 		stdout: lines("Not publishing the release, GCS flag is ignored"),
@@ -205,7 +205,7 @@ func TestReleaseFlagParsingGcsGcrIgnoredValues(t *testing.T) {
 
 func TestReleaseFlagParsingDefaults(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile("source-release.bash"))
+	sc := testReleaseShellScript()
 	tcs := []testCase{{
 		name: `parse_flags`,
 		commands: []string{
@@ -255,4 +255,11 @@ func TestReleaseFlagParsingDefaults(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, tc.test(sc))
 	}
+}
+
+func testReleaseShellScript() shellScript {
+	return newShellScript(loadFile(
+		"fake-prow-job.bash",
+		"source-release.bash",
+	))
 }
