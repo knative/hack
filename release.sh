@@ -29,7 +29,7 @@ readonly REPO_UPSTREAM="https://github.com/${ORG_NAME}/${REPO_NAME}"
 readonly NIGHTLY_GCR="gcr.io/knative-nightly/github.com/${ORG_NAME}/${REPO_NAME}"
 readonly RELEASE_GCR="gcr.io/knative-releases/github.com/${ORG_NAME}/${REPO_NAME}"
 
-# Signing identities Knative releases.
+# Signing identities for knative releases.
 readonly NIGHTLY_SIGNING_IDENTITY="signer@knative-nightly.iam.gserviceaccount.com"
 readonly RELEASE_SIGNING_IDENTITY="signer@knative-releases.iam.gserviceaccount.com"
 
@@ -319,7 +319,7 @@ function sign_release() {
   ## the release for all jobs that publish images.
   if [[ -f "imagerefs.txt" ]]; then
       echo "Signing Images with the identity ${SIGNING_IDENTITY}"
-      COSIGN_EXPERIMENTAL=1 cosign sign "$(cat imagerefs.txt)" --recursive --identity-token="$(
+      COSIGN_EXPERIMENTAL=1 cosign sign $(cat imagerefs.txt) --recursive --identity-token="$(
         gcloud auth print-identity-token --audiences=sigstore \
         --include-email \
         --impersonate-service-account="${SIGNING_IDENTITY}")"
@@ -484,7 +484,7 @@ function parse_flags() {
     [[ -z "${RELEASE_DIR}" ]] && RELEASE_DIR="${REPO_ROOT_DIR}"
   fi
 
-  # Set signing identity for cosign, it would already be set to RELEASE one if the release-gcr/release-gcs flags are set
+  # Set signing identity for cosign, it would already be set to the RELEASE one if the release-gcr/release-gcs flags are set
   if [[ -z "${SIGNING_IDENTITY}" ]]; then
     SIGNING_IDENTITY="${NIGHTLY_SIGNING_IDENTITY}"
   fi
