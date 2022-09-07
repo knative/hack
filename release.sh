@@ -29,6 +29,10 @@ readonly REPO_UPSTREAM="https://github.com/${ORG_NAME}/${REPO_NAME}"
 readonly NIGHTLY_GCR="gcr.io/knative-nightly/github.com/${ORG_NAME}/${REPO_NAME}"
 readonly RELEASE_GCR="gcr.io/knative-releases/github.com/${ORG_NAME}/${REPO_NAME}"
 
+# Signing identities Knative releases.
+readonly NIGHTLY_SIGNING_IDENTITY="signer@knative-nightly.iam.gserviceaccount.com"
+readonly RELEASE_SIGNING_IDENTITY="signer@knative-releases.iam.gserviceaccount.com"
+
 # Georeplicate images to {us,eu,asia}.gcr.io
 readonly GEO_REPLICATION=(us eu asia)
 
@@ -99,7 +103,7 @@ VALIDATION_TESTS="./test/presubmit-tests.sh"
 ARTIFACTS_TO_PUBLISH=""
 FROM_NIGHTLY_RELEASE=""
 FROM_NIGHTLY_RELEASE_GCS=""
-SIGNING_KEY=""
+SIGNING_IDENTITY=""
 export KO_DOCKER_REPO="gcr.io/knative-nightly"
 # Build stripped binary to reduce size
 export GOFLAGS="-ldflags=-s -ldflags=-w"
@@ -310,18 +314,22 @@ function sign_release() {
   ## Sign the images with cosign
   ## For now, check if ko has created imagerefs.txt file. In the future, missing image refs will break
   ## the release for all jobs that publish images.
-  if [[ -f "imagerefs.txt"  && -z ${SIGNING_KEY} ]]; then
-      echo "Signing Images with the key ${SIGNING_KEY}"
-      COSIGN_EXPERIMENTAL=1 cosign sign $(cat imagerefs.txt) --key gcpkms://"${SIGNING_KEY}"
-      cosign public-key --key gcpkms://"${SIGNING_KEY}" > cosign.pub
-      gsutil -m cp cosign.pub "gs://${RELEASE_GCS_BUCKET}/cosign.pub"
+  if [[ -f "imagerefs.txt" ]]; then
+      echo "Signing Images with the identity ${SIGNING_IDENTITY}"
+      COSIGN_EXPERIMENTAL=1 cosign sign "$(cat imagerefs.txt)" --recursive --identity-token="$(
+        gcloud auth print-identity-token --audiences=sigstore \
+        --include-email \
+        --impersonate-service-account="${SIGNING_IDENTITY}")"
   fi
-  
+
   ## Check if there is checksums.txt file. If so, sign the checksum file
-  if [[ -f "checksums.txt"  && -z ${SIGNING_KEY} ]]; then
-      echo "Signing checksums with the key ${SIGNING_KEY}"
-      COSIGN_EXPERIMENTAL=1 cosign sign-blob checksums.txt --key gcpkms://"${SIGNING_KEY}" --output-signature checksums.txt.sig --output-certificate checksums.txt.pem
-      ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH} checksums.txt.sig checksums.txt.pem"
+  if [[ -f "checksums.txt" ]]; then
+      echo "Signing Images with the identity ${SIGNING_IDENTITY}"
+      COSIGN_EXPERIMENTAL=1 cosign sign-blob checksums.txt --output-signature checksums.txt.sig --identity-token="$(
+        gcloud auth print-identity-token --audiences=sigstore \
+        --include-email \
+        --impersonate-service-account="${SIGNING_IDENTITY}")"
+      ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH} checksums.txt.sig"
   fi
 }
 
@@ -397,10 +405,12 @@ function parse_flags() {
             ;;
           --release-gcr)
             KO_DOCKER_REPO=$1
+            SIGNING_IDENTITY=$RELEASE_SIGNING_IDENTITY
             has_gcr_flag=1
             ;;
           --release-gcs)
             RELEASE_GCS_BUCKET=$1
+            SIGNING_IDENTITY=$RELEASE_SIGNING_IDENTITY
             RELEASE_DIR=""
             has_gcs_flag=1
             ;;
@@ -424,10 +434,6 @@ function parse_flags() {
           --from-nightly)
             [[ $1 =~ ^v[0-9]+-[0-9a-f]+$ ]] || abort "nightly tag must be 'vYYYYMMDD-commithash'"
             FROM_NIGHTLY_RELEASE=$1
-            ;;
-          --signing-key)
-            [[ $1 =~ ^projects\/[a-zA-Z0-9-]+\/locations\/[a-zA-Z0-9-]+\/keyRings\/[a-zA-Z0-9-]+\/cryptoKeys\/[a-zA-Z0-9-]+$ ]] || abort "signing key must be 'projects/[PROJECT_ID]/locations/[LOCATION]/keyRings/[KEYRING]/cryptoKeys/[CRYPTOKEY]'"
-            SIGNING_KEY=$1
             ;;
           *) abort "unknown option ${parameter}" ;;
         esac
@@ -475,6 +481,11 @@ function parse_flags() {
     [[ -z "${RELEASE_DIR}" ]] && RELEASE_DIR="${REPO_ROOT_DIR}"
   fi
 
+  # Set signing identity for cosign, it would already be set to RELEASE one if the release-gcr/release-gcs flags are set
+  if [[ -z "${SIGNING_IDENTITY}" ]]; then
+    SIGNING_IDENTITY="${NIGHTLY_SIGNING_IDENTITY}"
+  fi
+
   [[ -z "${RELEASE_GCS_BUCKET}" && -z "${RELEASE_DIR}" ]] && abort "--release-gcs or --release-dir must be used"
   if [[ -n "${RELEASE_DIR}" ]]; then
     mkdir -p "${RELEASE_DIR}" || abort "cannot create release dir '${RELEASE_DIR}'"
@@ -507,7 +518,7 @@ function parse_flags() {
   readonly RELEASE_DIR
   readonly VALIDATION_TESTS
   readonly FROM_NIGHTLY_RELEASE
-  readonly SIGNING_KEY
+  readonly SIGNING_IDENTITY
 }
 
 # Run tests (unless --skip-tests was passed). Conveniently displays a banner indicating so.
