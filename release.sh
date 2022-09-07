@@ -311,6 +311,9 @@ function build_from_source() {
 
 # Build a release from source.
 function sign_release() {
+  if [ -z "$SIGN_IMAGES" ]; then # Temporary Feature Gate
+    return 0
+  fi
   ## Sign the images with cosign
   ## For now, check if ko has created imagerefs.txt file. In the future, missing image refs will break
   ## the release for all jobs that publish images.
