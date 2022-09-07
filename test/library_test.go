@@ -45,7 +45,7 @@ func TestFails(t *testing.T) {
 
 func TestFailsWithFatal(t *testing.T) {
 	// Simulate a zap.Fatal() call.
-	fmt.Println("fatal\tTestFailsWithFatal\tsimple_test.go:999\tFailed with logger.Fatal()")
+	fmt.Println("fatal\tTestFailsWithFatal\tlibrary_test.go:48\tFailed with logger.Fatal()")
 	signal(os.Kill)
 }
 

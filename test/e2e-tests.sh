@@ -23,7 +23,7 @@
 # Calling this script without arguments will create a new cluster in
 # project $PROJECT_ID, run the tests and delete the cluster.
 
-set -Eeo pipefail
+set -Eeuo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
 
@@ -31,12 +31,15 @@ function knative_setup() {
   start_latest_knative_serving
 }
 
+function dump_metrics() {
+  header ">> Starting kube proxy"
+  header ">> Grabbing k8s metrics"
+}
+
 # Script entry point.
 initialize "$@" --max-nodes=1 --machine=e2-standard-2 \
   --enable-workload-identity --cluster-version=latest \
   --extra-gcloud-flags "--enable-stackdriver-kubernetes --no-enable-ip-alias --no-enable-autoupgrade"
-
-set -Eeuo pipefail
 
 go_test_e2e ./test/e2e || fail_test
 
