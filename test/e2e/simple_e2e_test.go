@@ -17,14 +17,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package e2e
+package e2e_test
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // This is actually a unit test, but it does exercise the necessary helper functions.
 
 func TestE2ESucceeds(t *testing.T) {
 	// Always succeed.
+	require.Equal(t, "TestE2ESucceeds", t.Name())
 }

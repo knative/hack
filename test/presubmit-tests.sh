@@ -23,8 +23,6 @@
 
 set -Eeuo pipefail
 
-export GO111MODULE=on
-
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/../presubmit-tests.sh"
 
 # Run our custom build tests after the standard build tests.
@@ -34,17 +32,6 @@ function post_build_tests() {
   for script in *.sh; do
     subheader "Checking integrity of ${script}"
     bash -c "source ${script}" || { failed=1; echo "--- FAIL: ${script}"; }
-  done
-  return ${failed}
-}
-
-# Run our custom unit tests after the standard unit tests.
-
-function post_unit_tests() {
-  local failed=0
-  for test in ./test/unit/*-tests.sh; do
-    subheader "Running tests in ${test}"
-    ${test} || { failed=1; echo "--- FAIL: ${test}"; }
   done
   return ${failed}
 }
