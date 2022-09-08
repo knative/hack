@@ -11,12 +11,15 @@ import (
 
 func TestHelperFunctions(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile(
-		"source-library.bash",
-		"fake-prow-job.bash",
-	), mockGo(), mockKubectl(map[string]string{
-		"get pods -n test-infra --selector=app=controller": "acme\nexample\nknative",
-	}))
+	sc := newShellScript(
+		fakeProwJob(),
+		loadFile("source-library.bash"),
+		mockGo(),
+		mockKubectl(response{
+			"get pods -n test-infra --selector=app=controller",
+			simply("acme\nexample\nknative"),
+		}),
+	)
 	tcs := []testCase{{
 		name:   `echo "$REPO_NAME_FORMATTED"`,
 		stdout: lines("Knative Hack"),

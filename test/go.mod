@@ -1,4 +1,4 @@
-module knative.dev/hack/test/e2e
+module knative.dev/hack/test
 
 go 1.18
 

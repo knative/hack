@@ -12,7 +12,8 @@ func TestReportGoTest(t *testing.T) {
 			fmt.Sprintf(`export TMPDIR="%s/"`, tmpdir),
 			fmt.Sprintf(`export ARTIFACTS="%s/"`, tmpdir),
 		),
-		loadFile("source-library.bash", "fake-prow-job.bash"),
+		fakeProwJob(),
+		loadFile("source-library.bash"),
 	)
 	logChecks := []check{
 		contains("Finished run, return code is 1"),

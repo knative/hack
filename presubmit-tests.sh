@@ -139,15 +139,14 @@ function __build_test_runner_for_module() {
   # Don't merge these two lines, or return code will always be 0.
   # Get all build tags in go code (ignore /vendor, /hack and /third_party)
   local tags
-  tags="$(grep -I  -r '// +build' . | \
-    grep -v '/vendor/' | \
+  tags="$(grep -I -r '// +build' . | grep -v '/vendor/' | \
     grep -v '/hack/' | \
     grep -v '/third_party' | \
     cut -f3 -d' ' | \
     tr ',' '\n' | \
     sort | uniq | \
     grep -v '^!' | \
-    tr '\n' ' ')"
+    paste -s -d, /dev/stdin)"
   local go_pkg_dirs
   go_pkg_dirs="$(go list -tags "${tags}" ./...)" || return $?
   if [[ -z "${go_pkg_dirs}" ]]; then
@@ -241,13 +240,14 @@ function run_integration_tests() {
 function default_integration_test_runner() {
   local failed=0
 
-  while IFS= read -r e2e_test; do
+  while read -r e2e_test; do
     echo "Running integration test ${e2e_test}"
-    if ! ${e2e_test}; then
-      failed=1
-      step_failed "${e2e_test}"
+    "${e2e_test}" || failed=$?
+    if (( failed )); then
+      echo "${e2e_test} failed: $failed" >&2
+      return $failed
     fi
-  done < <(find test/ ! -name "$(printf "*\n*")" -name "e2e-*tests.sh" -maxdepth 1)
+  done < <(find test/ -maxdepth 1 ! -name "$(printf "*\n*")" -name "e2e-*tests.sh")
   return ${failed}
 }
 
