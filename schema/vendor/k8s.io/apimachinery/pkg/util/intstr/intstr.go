@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/gofuzz"
 	"k8s.io/klog/v2"
-	fuzz "knative.dev/hack/schema/vendor/github.com/google/gofuzz"
 )
 
 // IntOrString is a type that can hold an int32 or a string.  When used in
