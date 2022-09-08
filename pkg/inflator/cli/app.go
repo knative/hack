@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/wavesoftware/go-commandline"
-	"knative.dev/hack/script/extract"
+	"knative.dev/hack/pkg/inflator/extract"
 )
 
 // Options to override the commandline for testing purposes.
@@ -22,7 +22,7 @@ func (a App) Command() *cobra.Command {
 			"and provide a source file path to requested script",
 		Example: `
 # In Bash script
-source "$(go run knative.dev/hack/cmd/script library.sh)"`,
+source "$(go run knative.dev/hack/cmd/script@latest library.sh)"`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, argv []string) error {

@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/wavesoftware/go-commandline"
 	main "knative.dev/hack/cmd/script"
-	"knative.dev/hack/script/cli"
+	"knative.dev/hack/pkg/inflator/cli"
 )
 
 func TestMainFn(t *testing.T) {

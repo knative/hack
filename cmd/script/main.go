@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/wavesoftware/go-commandline"
-	"knative.dev/hack/script/cli"
+	"knative.dev/hack/pkg/inflator/cli"
 )
 
 func main() {

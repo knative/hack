@@ -1,8 +1,9 @@
 package extract
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -14,8 +15,11 @@ var (
 )
 
 func wrapErr(err error, target error) error {
+	if err == nil {
+		return nil
+	}
 	if errors.Is(err, target) {
 		return err
 	}
-	return fmt.Errorf("%w: %v", target, err)
+	return errors.WithStack(fmt.Errorf("%w: %v", target, err))
 }
