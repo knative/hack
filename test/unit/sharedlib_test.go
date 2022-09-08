@@ -132,7 +132,7 @@ type scriptlet func(t TestingT) string
 func newShellScript(scriptlets ...scriptlet) shellScript {
 	return shellScript{
 		append(scriptlets, mockBinary("date", response{
-			"", simply("2018-07-18 23:00:00"),
+			anyArgs{}, simply("2018-07-18 23:00:00"),
 		})),
 	}
 }
@@ -196,10 +196,10 @@ func mockBinary(name string, responses ...response) scriptlet {
 			fmt.Sprintf(`cat > "${TMPPATH}/%s" <<'EOF'`, name),
 			"#!/usr/bin/env bash")
 		for _, p := range responses {
-			code = append(code, fmt.Sprintf(`if [[ "$*" == *"%s"* ]]; then`, p.args))
+			code = append(code, fmt.Sprintf(`if [[ "$*" == %s ]]; then`, p.args))
 			code = append(code, p.response.Invocations(name)...)
 			code = append(code,
-				"  exit 0",
+				"  exit $?",
 				"fi")
 		}
 		code = append(code,
@@ -215,17 +215,35 @@ type invocations interface {
 	Invocations(bin string) []string
 }
 
+type args interface {
+	fmt.Stringer
+}
+
 type response struct {
-	args     string
+	args
 	response invocations
 }
 
+type startsWith struct {
+	prefix string
+}
+
+func (s startsWith) String() string {
+	return fmt.Sprintf(`"%s"*`, s.prefix)
+}
+
+type anyArgs struct{}
+
+func (a anyArgs) String() string {
+	return "*"
+}
+
 func mockGo(responses ...response) scriptlet {
-	callOriginals := []string{
-		"run knative.dev/test-infra/tools/modscope@latest",
-		"list",
-		"env",
-		"version",
+	callOriginals := []args{
+		startsWith{"run knative.dev/test-infra/tools/modscope@latest"},
+		startsWith{"list"},
+		startsWith{"env"},
+		startsWith{"version"},
 	}
 	originalResponses := make([]response, len(callOriginals))
 	for i, co := range callOriginals {

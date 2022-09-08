@@ -8,10 +8,11 @@ func TestRunE2eTests(t *testing.T) {
 		loadFile("exec-test-e2e-tests.bash"),
 		mockGo(),
 		mockKubectl(
-			response{"config current-context", simply("gke_deadbeef_1.24")},
-			response{"get pods --no-headers -n", simply("" +
-				"beef-e3c1 1/1 Running 0 2s\n" +
-				"ceed-45b3 1/1 Running 0 1s")},
+			response{startsWith{"config current-context"}, simply("gke_deadbeef_1.24")},
+			response{
+				startsWith{"get pods --no-headers -n"},
+				simply("beef-e3c1 1/1 Running 0 2s\nceed-45b3 1/1 Running 0 1s"),
+			},
 		),
 		mockBinary("gcloud"),
 	)

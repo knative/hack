@@ -241,7 +241,7 @@ function default_integration_test_runner() {
   local failed=0
 
   while read -r e2e_test; do
-    echo "Running integration test ${e2e_test}"
+    subheader "Running integration test ${e2e_test}"
     "${e2e_test}" || failed=$?
     if (( failed )); then
       echo "${e2e_test} failed: $failed" >&2
@@ -355,18 +355,18 @@ function main() {
       exit 0
     fi
     for test_to_run in "${TESTS_TO_RUN[@]}"; do
-      ${test_to_run} || { failed=1; step_failed "${test_to_run}"; }
+      ${test_to_run} || { failed=$?; step_failed "${test_to_run}"; }
     done
   fi
 
-  run_build_tests || { failed=1; step_failed "run_build_tests"; }
+  run_build_tests || { failed=$?; step_failed "run_build_tests"; }
   # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run unit tests if build tests failed
   if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
-    run_unit_tests || { failed=1; step_failed "run_unit_tests"; }
+    run_unit_tests || { failed=$?; step_failed "run_unit_tests"; }
   fi
   # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run integration tests if build/unit tests failed
   if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
-    run_integration_tests || { failed=1; step_failed "run_integration_tests"; }
+    run_integration_tests || { failed=$?; step_failed "run_integration_tests"; }
   fi
 
   exit ${failed}

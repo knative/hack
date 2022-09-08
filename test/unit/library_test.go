@@ -16,7 +16,7 @@ func TestHelperFunctions(t *testing.T) {
 		loadFile("source-library.bash"),
 		mockGo(),
 		mockKubectl(response{
-			"get pods -n test-infra --selector=app=controller",
+			startsWith{"get pods -n test-infra --selector=app=controller"},
 			simply("acme\nexample\nknative"),
 		}),
 	)

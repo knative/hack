@@ -15,7 +15,6 @@ func TestMainFunc(t *testing.T) {
 		loadFile("source-presubmit-tests.bash"),
 		mockGo(),
 		mockKubectl(),
-		instructions("set -x"),
 	)
 	tcs := []testCase{{
 		name: `main --build-tests`,
