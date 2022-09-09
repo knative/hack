@@ -14,7 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/rand"
+	"github.com/thanhpk/randstr"
 )
 
 var (
@@ -264,7 +264,7 @@ export PATH="${TMPPATH}:${PATH}"
 
 func (s shellScript) write(t TestingT, src string) string {
 	dir := currentDir()
-	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", rand.String(12)))
+	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", randstr.String(12)))
 	err := os.WriteFile(p, []byte(src), 0o600)
 	require.NoError(t, err)
 	return p

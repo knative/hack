@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/rand"
+	"github.com/thanhpk/randstr"
 )
 
 func TestReleaseHelperFunctions(t *testing.T) {
@@ -166,7 +166,7 @@ func TestReleaseFlagParsingNightly(t *testing.T) {
 func TestReleaseFlagParsingGithubToken(t *testing.T) {
 	t.Parallel()
 	tmpfile := t.TempDir() + "/github.token"
-	token := rand.String(12)
+	token := randstr.String(12)
 	err := os.WriteFile(tmpfile, []byte(token+"\n"), 0o600)
 	require.NoError(t, err)
 	sc := testReleaseShellScript()

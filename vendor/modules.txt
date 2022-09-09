@@ -1,9 +1,15 @@
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/google/go-cmp v0.5.6
+## explicit; go 1.8
 # github.com/inconshreveable/mousetrap v1.0.0
 ## explicit
 github.com/inconshreveable/mousetrap
+# github.com/kr/text v0.2.0
+## explicit
+# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
+## explicit; go 1.12
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
@@ -20,15 +26,17 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/thanhpk/randstr v1.0.4
+## explicit
+github.com/thanhpk/randstr
 # github.com/wavesoftware/go-commandline v1.0.0
 ## explicit; go 1.18
 github.com/wavesoftware/go-commandline
 # github.com/wavesoftware/go-retcode v1.0.0
 ## explicit; go 1.18
 github.com/wavesoftware/go-retcode
+# gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
+## explicit
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# k8s.io/apimachinery v0.25.0
-## explicit; go 1.19
-k8s.io/apimachinery/pkg/util/rand

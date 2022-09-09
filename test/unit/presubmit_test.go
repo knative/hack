@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/rand"
+	"github.com/thanhpk/randstr"
 )
 
 func TestMainFunc(t *testing.T) {
@@ -115,8 +115,8 @@ func TestPrType(t *testing.T) {
 
 func TestCustomAndMultiScript(t *testing.T) {
 	t.Parallel()
-	rng1 := rand.String(12)
-	rng2 := rand.String(12)
+	rng1 := randstr.String(12)
+	rng2 := randstr.String(12)
 	sc := newShellScript(
 		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
 		mockGo(),
