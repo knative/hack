@@ -30,6 +30,7 @@ readonly NIGHTLY_GCR="gcr.io/knative-nightly/github.com/${ORG_NAME}/${REPO_NAME}
 readonly RELEASE_GCR="gcr.io/knative-releases/github.com/${ORG_NAME}/${REPO_NAME}"
 
 # Signing identities for knative releases.
+export SIGN_IMAGES=${SIGN_IMAGES:-false} # Sign flag, disabled by default
 readonly NIGHTLY_SIGNING_IDENTITY="signer@knative-nightly.iam.gserviceaccount.com"
 readonly RELEASE_SIGNING_IDENTITY="signer@knative-releases.iam.gserviceaccount.com"
 
@@ -311,7 +312,7 @@ function build_from_source() {
 
 # Build a release from source.
 function sign_release() {
-  if [ -z "$SIGN_IMAGES" ]; then # Temporary Feature Gate
+  if [ "$SIGN_IMAGES" ]; then # Temporary Feature Gate
     return 0
   fi
   ## Sign the images with cosign
