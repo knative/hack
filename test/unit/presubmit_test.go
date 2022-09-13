@@ -5,30 +5,28 @@ import (
 	"path"
 	"strings"
 	"testing"
-
-	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 func TestMainFunc(t *testing.T) {
 	t.Parallel()
 	rootDir := path.Dir(path.Dir(currentDir()))
 	sc := newShellScript(
-		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
+		fakeProwJob(),
+		loadFile("source-presubmit-tests.bash"),
 		mockGo(),
-		mockGcloud(),
-		mockKubectl(map[string]string{}),
-		mockBinary("java", map[string]string{}),
-		mockBinary("mvn", map[string]string{}),
+		mockKubectl(),
 	)
 	tcs := []testCase{{
 		name: `main --build-tests`,
 		stdout: []check{
 			contains("RUNNING BUILD TESTS"),
-			contains("Build tests for knative.dev/hack/test/e2e"),
+			contains("Build tests for knative.dev/hack/test"),
 			contains("Build tests for knative.dev/hack/schema"),
 			contains("Build tests for knative.dev/hack"),
 			contains("Checking that go code builds"),
-			contains("go test -vet=off -tags e2e  -exec echo ./..."),
+			contains("go test -vet=off -tags e2e,hack,library -exec echo ./..."),
+			contains("go test -vet=off -tags e2e,library -exec echo ./..."),
+			contains("go test -vet=off -tags  -exec echo ./..."),
 			contains("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
 				" junit --suite=_build_tests --name=Check_Licenses --err-msg= --dest="),
 			contains("BUILD TESTS PASSED"),
@@ -37,7 +35,7 @@ func TestMainFunc(t *testing.T) {
 		name: `main --unit-tests`,
 		stdout: []check{
 			contains("RUNNING UNIT TESTS"),
-			contains("Unit tests for knative.dev/hack/test/e2e"),
+			contains("Unit tests for knative.dev/hack/test"),
 			contains("Unit tests for knative.dev/hack/schema"),
 			contains("Unit tests for knative.dev/hack"),
 			contains("Running go test with args: -short -race -count 1 ./..."),
@@ -71,7 +69,8 @@ func TestMainFunc(t *testing.T) {
 func TestPrType(t *testing.T) {
 	t.Parallel()
 	sc := newShellScript(
-		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
+		fakeProwJob(),
+		loadFile("source-presubmit-tests.bash"),
 		mockGo(),
 	)
 	tcs := []testCase{{
@@ -115,15 +114,13 @@ func TestPrType(t *testing.T) {
 
 func TestCustomAndMultiScript(t *testing.T) {
 	t.Parallel()
-	rng1 := rand.String(12)
-	rng2 := rand.String(12)
+	rng1 := randString(12)
+	rng2 := randString(12)
 	sc := newShellScript(
-		loadFile("fake-prow-job.bash", "source-presubmit-tests.bash"),
+		fakeProwJob(),
+		loadFile("source-presubmit-tests.bash"),
 		mockGo(),
-		mockGcloud(),
-		mockKubectl(map[string]string{}),
-		mockBinary("java", map[string]string{}),
-		mockBinary("mvn", map[string]string{}),
+		mockKubectl(),
 	)
 	tcs := []testCase{{
 		name:     `main --run-test "echo rng"`,

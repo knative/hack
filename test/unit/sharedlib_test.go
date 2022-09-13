@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 var (
@@ -37,7 +37,7 @@ func makeBanner(ch rune, msg string) string {
 		border,
 		side + " " + msg + " " + side,
 		border,
-		side + " 2018-07-18 23:00:00.000000000+00:00",
+		side + " 2018-07-18 23:00:00",
 		border,
 	}, "\n") + "\n"
 }
@@ -131,8 +131,8 @@ type scriptlet func(t TestingT) string
 
 func newShellScript(scriptlets ...scriptlet) shellScript {
 	return shellScript{
-		append(scriptlets, mockBinary("date", map[string]string{
-			"": "2018-07-18 23:00:00.000000000+00:00",
+		append(scriptlets, mockBinary("date", response{
+			anyArgs{}, simply("2018-07-18 23:00:00"),
 		})),
 	}
 }
@@ -166,19 +166,40 @@ func instructions(inst ...string) scriptlet {
 	}
 }
 
-func mockBinary(name string, responses map[string]string) scriptlet {
+type simply string
+
+func (s simply) Invocations(_ string) []string {
+	ls := strings.Split(string(s), "\n")
+	code := make([]string, len(ls))
+	for i, li := range ls {
+		code[i] = fmt.Sprintf(`  echo "%s"`, li)
+	}
+	return code
+}
+
+type callOriginal struct{}
+
+func (o callOriginal) Invocations(bin string) []string {
+	binPath, err := exec.LookPath(bin)
+	if err != nil {
+		panic(err)
+	}
+	return []string{
+		fmt.Sprintf(`  '%s' "$@"`, binPath),
+	}
+}
+
+func mockBinary(name string, responses ...response) scriptlet {
 	return func(t TestingT) string {
 		code := make([]string, 0, len(responses)*10)
 		code = append(code,
 			fmt.Sprintf(`cat > "${TMPPATH}/%s" <<'EOF'`, name),
 			"#!/usr/bin/env bash")
-		for args, response := range responses {
-			code = append(code, fmt.Sprintf(`if [[ "$*" == *"%s"* ]]; then`, args))
-			for _, li := range strings.Split(response, "\n") {
-				code = append(code, fmt.Sprintf(`  echo "%s"`, li))
-			}
+		for _, p := range responses {
+			code = append(code, fmt.Sprintf(`if [[ "$*" == %s ]]; then`, p.args))
+			code = append(code, p.response.Invocations(name)...)
 			code = append(code,
-				"  exit 0",
+				"  exit $?",
 				"fi")
 		}
 		code = append(code,
@@ -190,24 +211,69 @@ func mockBinary(name string, responses map[string]string) scriptlet {
 	}
 }
 
-type pair struct {
-	key, val string
+type invocations interface {
+	Invocations(bin string) []string
 }
 
-func mockGo(pairs ...pair) scriptlet {
-	vals := map[string]string{}
-	for _, p := range pairs {
-		vals[p.key] = p.val
+type args interface {
+	fmt.Stringer
+}
+
+type response struct {
+	args
+	response invocations
+}
+
+type startsWith struct {
+	prefix string
+}
+
+func (s startsWith) String() string {
+	return fmt.Sprintf(`"%s"*`, s.prefix)
+}
+
+type anyArgs struct{}
+
+func (a anyArgs) String() string {
+	return "*"
+}
+
+func mockGo(responses ...response) scriptlet {
+	callOriginals := []args{
+		startsWith{"run knative.dev/test-infra/tools/modscope@latest"},
+		startsWith{"list"},
+		startsWith{"env"},
+		startsWith{"version"},
 	}
-	return mockBinary("go", vals)
+	originalResponses := make([]response, len(callOriginals))
+	for i, co := range callOriginals {
+		originalResponses[i] = response{co, callOriginal{}}
+	}
+	return mockBinary("go", append(originalResponses, responses...)...)
 }
 
-func mockKubectl(responses map[string]string) scriptlet {
-	return mockBinary("kubectl", responses)
+func mockKubectl(responses ...response) scriptlet {
+	return mockBinary("kubectl", responses...)
 }
 
-func mockGcloud() scriptlet {
-	return mockBinary("gcloud", map[string]string{})
+func fakeProwJob() scriptlet {
+	return union(
+		loadFile("fake-prow-job.bash"),
+		mockBinary("gcloud"),
+		mockBinary("java"),
+		mockBinary("mvn"),
+		mockBinary("ko"),
+	)
+}
+
+func union(scriptlets ...scriptlet) scriptlet {
+	return func(t TestingT) string {
+		code := make([]string, 0, len(scriptlets)*10)
+		for _, s := range scriptlets {
+			code = append(code, s(t))
+		}
+		return strings.Join(code, "\n")
+	}
 }
 
 type TestingT interface {
@@ -245,7 +311,7 @@ export PATH="${TMPPATH}:${PATH}"
 `, t.TempDir())
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
-		source += strings.TrimPrefix(sclet(t), bashShebang)
+		source += "\n" + strings.TrimPrefix(sclet(t), bashShebang) + "\n"
 	}
 	source = bashShebang + "\n" +
 		bashQuotesRx.ReplaceAllStringFunc(source, func(in string) string {
@@ -264,7 +330,7 @@ export PATH="${TMPPATH}:${PATH}"
 
 func (s shellScript) write(t TestingT, src string) string {
 	dir := currentDir()
-	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", rand.String(12)))
+	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", randString(12)))
 	err := os.WriteFile(p, []byte(src), 0o600)
 	require.NoError(t, err)
 	return p
@@ -273,4 +339,13 @@ func (s shellScript) write(t TestingT, src string) string {
 func currentDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	return path.Dir(file)
+}
+
+func randString(n int) string {
+	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

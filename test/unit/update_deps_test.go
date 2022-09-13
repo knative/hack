@@ -13,13 +13,13 @@ func TestUpdateDeps(t *testing.T) {
 	tcs := []testCase{{
 		name:    "go_update_deps --unknown",
 		retcode: retcode(232),
-		stdout:  lines("=== Update Deps for Golang module: knative.dev/hack/test/e2e"),
+		stdout:  lines("=== Update Deps for Golang module: knative.dev/hack"),
 		stderr:  []check{contains("unknown option --unknown")},
 	}, {
 		name: "go_update_deps",
 		stdout: []check{
 			contains("Update Deps"),
-			contains("Golang module: knative.dev/hack/test/e2e"),
+			contains("Golang module: knative.dev/hack/test"),
 			contains("Golang module: knative.dev/hack/schema"),
 			contains("Golang module: knative.dev/hack"),
 			contains("Updating licenses"),
