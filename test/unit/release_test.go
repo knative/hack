@@ -258,8 +258,8 @@ func TestReleaseFlagParsingDefaults(t *testing.T) {
 }
 
 func testReleaseShellScript() shellScript {
-	return newShellScript(loadFile(
-		"fake-prow-job.bash",
-		"source-release.bash",
-	))
+	return newShellScript(
+		fakeProwJob(),
+		loadFile("source-release.bash"),
+	)
 }

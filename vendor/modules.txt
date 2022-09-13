@@ -26,9 +26,6 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/thanhpk/randstr v1.0.4
-## explicit
-github.com/thanhpk/randstr
 # github.com/wavesoftware/go-commandline v1.0.0
 ## explicit; go 1.18
 github.com/wavesoftware/go-commandline

@@ -98,7 +98,7 @@ RELEASE_NOTES=""
 RELEASE_BRANCH=""
 RELEASE_GCS_BUCKET="knative-nightly/${REPO_NAME}"
 RELEASE_DIR=""
-KO_FLAGS="-P --platform=all"
+KO_FLAGS="-P --platform=all --image-refs=imagerefs.txt"
 VALIDATION_TESTS="./test/presubmit-tests.sh"
 ARTIFACTS_TO_PUBLISH=""
 FROM_NIGHTLY_RELEASE=""
@@ -311,7 +311,7 @@ function build_from_source() {
 
 # Build a release from source.
 function sign_release() {
-  if [ -z "$SIGN_IMAGES" ]; then # Temporary Feature Gate
+  if [ -z "${SIGN_IMAGES:-}" ]; then # Temporary Feature Gate
     return 0
   fi
   ## Sign the images with cosign

@@ -4,12 +4,14 @@ import "testing"
 
 func TestE2eHelpers(t *testing.T) {
 	t.Parallel()
-	sc := newShellScript(loadFile(
-		"fake-prow-job.bash",
-		"source-e2e-tests.bash",
-		"smoke-test-custom-flag.bash",
-		"fake-dumps.bash",
-	))
+	sc := newShellScript(
+		fakeProwJob(),
+		loadFile(
+			"source-e2e-tests.bash",
+			"smoke-test-custom-flag.bash",
+			"fake-dumps.bash",
+		),
+	)
 	tcs := []testCase{{
 		name:   `initialize --smoke-test-custom-flag`,
 		stdout: lines(">> All tests passed"),

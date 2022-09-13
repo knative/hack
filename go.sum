@@ -27,8 +27,6 @@ github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSS
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/thanhpk/randstr v1.0.4 h1:IN78qu/bR+My+gHCvMEXhR/i5oriVHcTB/BJJIRTsNo=
-github.com/thanhpk/randstr v1.0.4/go.mod h1:M/H2P1eNLZzlDwAzpkkkUvoyNNMbzRGhESZuEQk3r0U=
 github.com/wavesoftware/go-commandline v1.0.0 h1:n7nrFr1unfiUcF7shA1rYf+YhXB12pY8uNYqPgFsHio=
 github.com/wavesoftware/go-commandline v1.0.0/go.mod h1:C9yRtwZxJSck99kk6SRRkOtC2ppQF/KDRy0yrzWJuHU=
 github.com/wavesoftware/go-retcode v1.0.0 h1:Z53+VpIHMvRMtjS6jPScdihbAN1ks3lIJ5Mj32gCpno=
