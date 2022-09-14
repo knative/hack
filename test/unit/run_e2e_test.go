@@ -7,13 +7,7 @@ func TestRunE2eTests(t *testing.T) {
 	sc := newShellScript(
 		loadFile("exec-test-e2e-tests.bash"),
 		mockGo(),
-		mockKubectl(
-			response{startsWith{"config current-context"}, simply("gke_deadbeef_1.24")},
-			response{
-				startsWith{"get pods --no-headers -n"},
-				simply("beef-e3c1 1/1 Running 0 2s\nceed-45b3 1/1 Running 0 1s"),
-			},
-		),
+		mockKubectl(),
 		mockBinary("gcloud"),
 	)
 	tcs := []testCase{{

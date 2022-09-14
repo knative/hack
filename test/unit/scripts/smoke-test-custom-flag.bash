@@ -16,8 +16,7 @@
 
 function parse_flags() {
   if [[ "$1" == "--smoke-test-custom-flag" ]]; then
-    echo ">> All tests passed"
-    exit 0
+    subheader "Custom flag detected"
+    return 0
   fi
-  fail_test "Unexpected flag $1 passed"
 }
