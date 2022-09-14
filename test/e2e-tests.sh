@@ -29,6 +29,11 @@ source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
 
 function knative_setup() {
   start_latest_knative_serving
+  export KNATIVE_SETUP_DONE=1
+}
+
+function test_setup() {
+  export TEST_SETUP_DONE=1
 }
 
 function dump_metrics() {
@@ -40,6 +45,9 @@ function dump_metrics() {
 initialize "$@" --max-nodes=1 --machine=e2-standard-2 \
   --enable-workload-identity --cluster-version=latest \
   --extra-gcloud-flags "--enable-stackdriver-kubernetes --no-enable-ip-alias --no-enable-autoupgrade"
+
+[[ ${KNATIVE_SETUP_DONE:-0} == 1 ]] || fail_test 'Knative setup not persisted'
+[[ ${TEST_SETUP_DONE:-0} == 1 ]] || fail_test 'Test setup not persisted'
 
 go_test_e2e ./test/e2e
 

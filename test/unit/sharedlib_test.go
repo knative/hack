@@ -253,7 +253,12 @@ func mockGo(responses ...response) scriptlet {
 }
 
 func mockKubectl(responses ...response) scriptlet {
-	return mockBinary("kubectl", responses...)
+	return mockBinary("kubectl", append([]response{{
+		startsWith{"config current-context"}, simply("gke_deadbeef_1.24"),
+	}, {
+		startsWith{"get pods --no-headers -n"},
+		simply("beef-e3c1 1/1 Running 0 2s\nceed-45b3 1/1 Running 0 1s"),
+	}}, responses...)...)
 }
 
 func fakeProwJob() scriptlet {

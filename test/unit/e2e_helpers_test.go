@@ -11,14 +11,16 @@ func TestE2eHelpers(t *testing.T) {
 			"smoke-test-custom-flag.bash",
 			"fake-dumps.bash",
 		),
+		mockGo(),
+		mockKubectl(),
 	)
 	tcs := []testCase{{
 		name:   `initialize --smoke-test-custom-flag`,
-		stdout: lines(">> All tests passed"),
+		stdout: []check{contains("Custom flag detected")},
 	}, {
 		name: `fail_test`,
 		commands: []string{
-			`initialize --run-test true`,
+			`initialize --run-tests`,
 			`fail_test`,
 		},
 		stderr:  aborted("test failed"),
