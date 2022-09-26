@@ -133,6 +133,7 @@ E2E_SCRIPT=""
 function initialize() {
   local run_tests=0
   local custom_flags=()
+  local extra_gcloud_flags=()
   local parse_script_flags=0
   E2E_SCRIPT="$(get_canonical_path "$0")"
   local e2e_script_command=( "${E2E_SCRIPT}" "--run-tests" )
@@ -178,7 +179,7 @@ function initialize() {
   done
 
   if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
-      custom_flags+=("--addons=NodeLocalDNS")
+      extra_gcloud_flags+=("--addons=NodeLocalDNS")
   fi
 
   readonly SKIP_DUMP_ON_FAILURE
@@ -186,7 +187,7 @@ function initialize() {
   readonly CLOUD_PROVIDER
 
   if (( ! run_tests )); then
-    create_test_cluster "${CLOUD_PROVIDER}" custom_flags e2e_script_command
+    create_test_cluster "${CLOUD_PROVIDER}" custom_flags extra_gcloud_flags e2e_script_command
   else
     setup_test_cluster
   fi
