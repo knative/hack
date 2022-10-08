@@ -314,6 +314,10 @@ function build_from_source() {
 
 # Build a release from source.
 function sign_release() {
+  if (( ! IS_PROW )); then # This function can't be run by devs on their laptops
+    return 0
+  fi
+
   # Notarizing mac binaries needs to be done before cosign as it changes the checksum values
   # of the darwin binaries
  if [ -n "${APPLE_CODESIGN_KEY}" ] && [ -n "${APPLE_CODESIGN_PASSWORD_FILE}" ] && [ -n "${APPLE_NOTARY_API_KEY}" ]; then
