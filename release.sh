@@ -314,10 +314,6 @@ function build_from_source() {
 
 # Build a release from source.
 function sign_release() {
-  if [ -z "${SIGN_IMAGES:-}" ]; then # Temporary Feature Gate
-    return 0
-  fi
-
   # Notarizing mac binaries needs to be done before cosign as it changes the checksum values
   # of the darwin binaries
  if [ -n "${APPLE_CODESIGN_KEY}" ] && [ -n "${APPLE_CODESIGN_PASSWORD_FILE}" ] && [ -n "${APPLE_NOTARY_API_KEY}" ]; then
@@ -331,11 +327,11 @@ function sign_release() {
     zip files.zip ${FILES}
     rcodesign notary-submit files.zip --api-key-path="${APPLE_NOTARY_API_KEY}" --wait
     sha256sum ${ARTIFACTS_TO_PUBLISH//checksums.txt/} > checksums.txt
+    echo "🧮     Post Notarization Checksum:"
+    cat checksums.txt
   fi
 
   ## Sign the images with cosign
-  ## For now, check if ko has created imagerefs.txt file. In the future, missing image refs will break
-  ## the release for all jobs that publish images.
   if [[ -f "imagerefs.txt" ]]; then
       echo "Signing Images with the identity ${SIGNING_IDENTITY}"
       COSIGN_EXPERIMENTAL=1 cosign sign $(cat imagerefs.txt) --recursive --identity-token="$(
