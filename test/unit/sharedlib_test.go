@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -127,7 +128,15 @@ func (tc testCase) validRetcode(t TestingT, gotRetcode int) {
 	}
 }
 
-type scriptlet func(t TestingT) string
+type scriptlet interface {
+	scriptlet(t TestingT) string
+}
+
+type fnScriptlet func(t TestingT) string
+
+func (f fnScriptlet) scriptlet(t TestingT) string {
+	return f(t)
+}
 
 func newShellScript(scriptlets ...scriptlet) shellScript {
 	return shellScript{
@@ -142,28 +151,28 @@ type shellScript struct {
 }
 
 func loadFile(names ...string) scriptlet {
-	return func(t TestingT) string {
+	return fnScriptlet(func(t TestingT) string {
 		sc := make([]scriptlet, 0, len(names))
 		for i := range names {
 			name := names[i]
-			sc = append(sc, func(t TestingT) string {
+			sc = append(sc, fnScriptlet(func(t TestingT) string {
 				byts, err := scripts.ReadFile(path.Join("scripts", name))
 				require.NoError(t, err)
 				return string(byts)
-			})
+			}))
 		}
 		src := make([]string, len(sc))
 		for i, s := range sc {
-			src[i] = s(t)
+			src[i] = s.scriptlet(t)
 		}
 		return strings.Join(src, "\n")
-	}
+	})
 }
 
 func instructions(inst ...string) scriptlet {
-	return func(t TestingT) string {
+	return fnScriptlet(func(t TestingT) string {
 		return strings.Join(inst, "\n")
-	}
+	})
 }
 
 type simply string
@@ -190,7 +199,7 @@ func (o callOriginal) Invocations(bin string) []string {
 }
 
 func mockBinary(name string, responses ...response) scriptlet {
-	return func(t TestingT) string {
+	return fnScriptlet(func(t TestingT) string {
 		code := make([]string, 0, len(responses)*10)
 		code = append(code,
 			fmt.Sprintf(`cat > "${TMPPATH}/%s" <<'EOF'`, name),
@@ -208,7 +217,7 @@ func mockBinary(name string, responses ...response) scriptlet {
 			fmt.Sprintf(`chmod +x "${TMPPATH}/%s"`, name),
 		)
 		return strings.Join(code, "\n") + "\n"
-	}
+	})
 }
 
 type invocations interface {
@@ -239,8 +248,11 @@ func (a anyArgs) String() string {
 }
 
 func mockGo(responses ...response) scriptlet {
+	lstags := "knative.dev/test-infra/tools/go-ls-tags@latest"
+	modscope := "knative.dev/test-infra/tools/modscope@latest"
 	callOriginals := []args{
-		startsWith{"run knative.dev/test-infra/tools/modscope@latest"},
+		startsWith{"run " + lstags},
+		startsWith{"run " + modscope},
 		startsWith{"list"},
 		startsWith{"env"},
 		startsWith{"version"},
@@ -249,7 +261,13 @@ func mockGo(responses ...response) scriptlet {
 	for i, co := range callOriginals {
 		originalResponses[i] = response{co, callOriginal{}}
 	}
-	return mockBinary("go", append(originalResponses, responses...)...)
+	return prefetchScriptlet{
+		delegate: mockBinary("go", append(originalResponses, responses...)...),
+		prefetchers: []prefetcher{
+			goRunHelpPrefetcher(lstags),
+			goRunHelpPrefetcher(modscope),
+		},
+	}
 }
 
 func mockKubectl(responses ...response) scriptlet {
@@ -272,13 +290,13 @@ func fakeProwJob() scriptlet {
 }
 
 func union(scriptlets ...scriptlet) scriptlet {
-	return func(t TestingT) string {
+	return fnScriptlet(func(t TestingT) string {
 		code := make([]string, 0, len(scriptlets)*10)
 		for _, s := range scriptlets {
-			code = append(code, s(t))
+			code = append(code, s.scriptlet(t))
 		}
 		return strings.Join(code, "\n")
-	}
+	})
 }
 
 type TestingT interface {
@@ -288,6 +306,7 @@ type TestingT interface {
 }
 
 func (s shellScript) run(t TestingT, commands []string) (int, string, string, string) {
+	s.prefetch(t)
 	src := s.source(t, commands)
 	sf := s.write(t, src)
 	defer func(name string) {
@@ -316,7 +335,7 @@ export PATH="${TMPPATH}:${PATH}"
 `, t.TempDir())
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
-		source += "\n" + strings.TrimPrefix(sclet(t), bashShebang) + "\n"
+		source += "\n" + strings.TrimPrefix(sclet.scriptlet(t), bashShebang) + "\n"
 	}
 	source = bashShebang + "\n" +
 		bashQuotesRx.ReplaceAllStringFunc(source, func(in string) string {
@@ -339,6 +358,69 @@ func (s shellScript) write(t TestingT, src string) string {
 	err := os.WriteFile(p, []byte(src), 0o600)
 	require.NoError(t, err)
 	return p
+}
+
+type prefetcher interface {
+	prefetch(t TestingT)
+}
+
+type fnPrefetcher func(t TestingT)
+
+func (f fnPrefetcher) prefetch(t TestingT) {
+	f(t)
+}
+
+var goRunHelpPrefetch = map[string]bool{}
+
+func goRunHelpPrefetcher(tool string) prefetcher {
+	return fnPrefetcher(func(t TestingT) {
+		if goRunHelpPrefetch[tool] {
+			return
+		}
+		c := exec.Command("go", "run", tool, "--help")
+		var (
+			stdout, stderr io.ReadCloser
+			err            error
+		)
+		stdout, err = c.StdoutPipe()
+		require.NoError(t, err)
+		stderr, err = c.StderrPipe()
+		require.NoError(t, err)
+		err = c.Run()
+		if err != nil {
+			stdBytes, merr := io.ReadAll(stdout)
+			require.NoError(t, merr)
+			errBytes, rerr := io.ReadAll(stderr)
+			require.NoError(t, rerr)
+			require.NoError(t, err,
+				"------\nSTDOUT\n------", string(stdBytes),
+				"------\nSTDERR\n------", string(errBytes))
+		}
+		goRunHelpPrefetch[tool] = true
+	})
+}
+
+type prefetchScriptlet struct {
+	delegate    scriptlet
+	prefetchers []prefetcher
+}
+
+func (p prefetchScriptlet) scriptlet(t TestingT) string {
+	return p.delegate.scriptlet(t)
+}
+
+func (p prefetchScriptlet) prefetch(t TestingT) {
+	for _, pr := range p.prefetchers {
+		pr.prefetch(t)
+	}
+}
+
+func (s shellScript) prefetch(t TestingT) {
+	for _, sclet := range s.scriptlets {
+		if pf, ok := sclet.(prefetcher); ok {
+			pf.prefetch(t)
+		}
+	}
 }
 
 func currentDir() string {
