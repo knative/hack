@@ -370,13 +370,8 @@ func (f fnPrefetcher) prefetch(t TestingT) {
 	f(t)
 }
 
-var goRunHelpPrefetch = map[string]bool{}
-
 func goRunHelpPrefetcher(tool string) prefetcher {
 	return fnPrefetcher(func(t TestingT) {
-		if goRunHelpPrefetch[tool] {
-			return
-		}
 		c := exec.Command("go", "run", tool, "--help")
 		var (
 			stdout, stderr io.ReadCloser
@@ -396,7 +391,6 @@ func goRunHelpPrefetcher(tool string) prefetcher {
 				"------\nSTDOUT\n------", string(stdBytes),
 				"------\nSTDERR\n------", string(errBytes))
 		}
-		goRunHelpPrefetch[tool] = true
 	})
 }
 
