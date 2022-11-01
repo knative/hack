@@ -370,7 +370,7 @@ func (f fnPrefetcher) prefetch(t TestingT) {
 	f(t)
 }
 
-// goRunHelpPrefetcher will call `go run tool --help` before the testing starts. 
+// goRunHelpPrefetcher will call `go run tool --help` before the testing starts.
 // This is to ensure the given tool is downloaded and compiled, so the download
 // and compilation messages, which go prints will not influence the test.
 func goRunHelpPrefetcher(tool string) prefetcher {
