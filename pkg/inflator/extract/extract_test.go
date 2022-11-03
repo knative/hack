@@ -3,6 +3,7 @@ package extract_test
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -21,24 +22,26 @@ func TestExtract(t *testing.T) {
 	prtr := &testPrinter{}
 	err := op.Extract(prtr)
 	require.NoError(t, err)
+	errOut := standarizeErrOut(prtr.err.String(), tmpdir)
 	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
 		`[hack] Extracting hack scripts to directory: /tmp/x
-[hack] codegen-library.sh               1 KiB +
-[hack] e2e-tests.sh                     6 KiB ++
-[hack] infra-library.sh                 5 KiB +
-[hack] library.sh                      33 KiB +++++++
-[hack] microbenchmarks.sh               2 KiB +
-[hack] performance-tests.sh             6 KiB ++
-[hack] presubmit-tests.sh              12 KiB +++
-[hack] release.sh                      27 KiB ++++++
-[hack] shellcheck-presubmit.sh          1 KiB +
-`, strings.ReplaceAll(prtr.err.String(), tmpdir, "/tmp/x"))
+[hack] codegen-library.sh
+[hack] e2e-tests.sh
+[hack] infra-library.sh
+[hack] library.sh
+[hack] microbenchmarks.sh
+[hack] performance-tests.sh
+[hack] presubmit-tests.sh
+[hack] release.sh
+[hack] shellcheck-presubmit.sh
+`, errOut)
 
 	// second time should be a no-op
 	prtr = &testPrinter{}
 	err = op.Extract(prtr)
 	require.NoError(t, err)
+	errOut = standarizeErrOut(prtr.err.String(), tmpdir)
 	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
 		`[hack] Extracting hack scripts to directory: /tmp/x
@@ -51,7 +54,14 @@ func TestExtract(t *testing.T) {
 [hack] presubmit-tests.sh             up-to-date
 [hack] release.sh                     up-to-date
 [hack] shellcheck-presubmit.sh        up-to-date
-`, strings.ReplaceAll(prtr.err.String(), tmpdir, "/tmp/x"))
+`, errOut)
+}
+
+func standarizeErrOut(errOut string, tmpdir string) string {
+	errOut = strings.ReplaceAll(errOut, tmpdir, "/tmp/x")
+	re := regexp.MustCompile(`\s+\d+ KiB \++`)
+	errOut = re.ReplaceAllString(errOut, "")
+	return errOut
 }
 
 type testPrinter struct {
