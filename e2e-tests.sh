@@ -60,6 +60,7 @@ function setup_test_cluster() {
 
   header "Setting up test cluster"
   kubectl get nodes
+
   # Set the actual project the test cluster resides in
   # It will be a project assigned by Boskos if test is running on Prow,
   # otherwise will be ${E2E_GCP_PROJECT_ID} set up by user.
@@ -89,8 +90,6 @@ function setup_test_cluster() {
 
   echo "- Cluster is ${k8s_cluster}"
   echo "- Docker is ${KO_DOCKER_REPO}"
-
-  export KO_DATA_PATH="${REPO_ROOT_DIR}/.git"
 
   # Do not run teardowns if we explicitly want to skip them.
   (( ! SKIP_TEARDOWNS )) && add_trap teardown_test_resources EXIT
