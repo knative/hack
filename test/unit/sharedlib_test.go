@@ -333,6 +333,7 @@ func (s shellScript) source(t TestingT, commands []string) string {
 set -Eeuo pipefail
 export TMPPATH='%s'
 export PATH="${TMPPATH}:${PATH}"
+export KNATIVE_HACK_SCRIPT_MANUAL_VERBOSE=true
 `, t.TempDir())
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {

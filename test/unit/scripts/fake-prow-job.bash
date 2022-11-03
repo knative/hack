@@ -20,4 +20,3 @@ if [[ -z "${PROW_JOB_ID:-}" ]]; then
   export JOB_TYPE='presubmit'
   export PULL_PULL_SHA='deadbeef1234567890'
 fi
-export KNATIVE_HACK_SCRIPT_MANUAL_VERBOSE=true
