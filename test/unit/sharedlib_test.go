@@ -253,6 +253,7 @@ func mockGo(responses ...response) scriptlet {
 	callOriginals := []args{
 		startsWith{"run " + lstags},
 		startsWith{"run " + modscope},
+		startsWith{"run ./"},
 		startsWith{"list"},
 		startsWith{"env"},
 		startsWith{"version"},

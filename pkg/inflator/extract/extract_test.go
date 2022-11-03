@@ -13,7 +13,7 @@ import (
 
 func TestExtract(t *testing.T) {
 	tmpdir := t.TempDir()
-	t.Setenv(extract.ArtifactsEnvVar, tmpdir)
+	t.Setenv(extract.HackScriptsDirEnvVar, tmpdir)
 	op := extract.Operation{
 		ScriptName: "library.sh",
 		Verbose:    true,
@@ -21,9 +21,9 @@ func TestExtract(t *testing.T) {
 	prtr := &testPrinter{}
 	err := op.Extract(prtr)
 	require.NoError(t, err)
-	assert.Equal(t, prtr.out.String(), tmpdir+"/hack-scripts/library.sh\n")
+	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
-		`[hack] Extracting hack scripts to directory: /tmp/x/hack-scripts
+		`[hack] Extracting hack scripts to directory: /tmp/x
 [hack] codegen-library.sh               1 KiB +
 [hack] e2e-tests.sh                     6 KiB ++
 [hack] infra-library.sh                 5 KiB +
@@ -31,7 +31,7 @@ func TestExtract(t *testing.T) {
 [hack] microbenchmarks.sh               2 KiB +
 [hack] performance-tests.sh             6 KiB ++
 [hack] presubmit-tests.sh              12 KiB +++
-[hack] release.sh                      26 KiB ++++++
+[hack] release.sh                      27 KiB ++++++
 [hack] shellcheck-presubmit.sh          1 KiB +
 `, strings.ReplaceAll(prtr.err.String(), tmpdir, "/tmp/x"))
 
@@ -39,9 +39,9 @@ func TestExtract(t *testing.T) {
 	prtr = &testPrinter{}
 	err = op.Extract(prtr)
 	require.NoError(t, err)
-	assert.Equal(t, prtr.out.String(), tmpdir+"/hack-scripts/library.sh\n")
+	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
-		`[hack] Extracting hack scripts to directory: /tmp/x/hack-scripts
+		`[hack] Extracting hack scripts to directory: /tmp/x
 [hack] codegen-library.sh             up-to-date
 [hack] e2e-tests.sh                   up-to-date
 [hack] infra-library.sh               up-to-date

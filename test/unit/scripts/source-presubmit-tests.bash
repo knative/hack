@@ -14,4 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/../../presubmit-tests.sh"
+set -Eeuo pipefail
+
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." > /dev/null
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script presubmit-tests.sh)"
+popd > /dev/null

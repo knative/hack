@@ -25,7 +25,10 @@
 
 set -Eeuo pipefail
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." > /dev/null
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script e2e-tests.sh)"
+popd > /dev/null
 
 function knative_setup() {
   start_latest_knative_serving

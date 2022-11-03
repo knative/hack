@@ -12,7 +12,8 @@ import (
 
 func TestApp(t *testing.T) {
 	tmpdir := t.TempDir()
-	t.Setenv(extract.ArtifactsEnvVar, tmpdir)
+	t.Setenv(extract.HackScriptsDirEnvVar, tmpdir)
+	t.Setenv(cli.ManualVerboseEnvVar, "true")
 	c := cli.App{}.Command()
 	var (
 		outb bytes.Buffer
@@ -24,6 +25,6 @@ func TestApp(t *testing.T) {
 	err := c.Execute()
 
 	require.NoError(t, err)
-	assert.Equal(t, outb.String(), tmpdir+"/hack-scripts/e2e-tests.sh\n")
+	assert.Equal(t, outb.String(), tmpdir+"/e2e-tests.sh\n")
 	assert.Equal(t, errb.String(), "")
 }

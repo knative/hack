@@ -16,6 +16,9 @@
 
 set -Eeuo pipefail
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/../../library.sh"
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." > /dev/null
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script library.sh)"
+popd > /dev/null
 
 go_update_deps "$@"

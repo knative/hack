@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	// ArtifactsEnvVar is the name of the environment variable that points
-	// to ARTIFACTS directory.
-	ArtifactsEnvVar = "ARTIFACTS"
+	// HackScriptsDirEnvVar is the name of the environment variable that points
+	// to directory where knative-hack scripts will be extracted.
+	HackScriptsDirEnvVar = "KNATIVE_HACK_SCRIPTS_DIR"
 	// PermOwnerWrite is the permission bits for owner write.
 	PermOwnerWrite = 0o200
 	// PermAllExecutable is the permission bits for executable.
@@ -42,14 +42,10 @@ type Operation struct {
 // provide the file path to it.
 func (o Operation) Extract(prtr Printer) error {
 	l := logger{o.Verbose, prtr}
-	artifactsDir := os.Getenv(ArtifactsEnvVar)
-	if artifactsDir == "" {
-		var err error
-		if artifactsDir, err = os.MkdirTemp("", "knative.*"); err != nil {
-			return wrapErr(err, ErrBug)
-		}
+	hackRootDir := os.Getenv(HackScriptsDirEnvVar)
+	if hackRootDir == "" {
+		hackRootDir = path.Join(os.TempDir(), "knative", "hack", "scripts")
 	}
-	hackRootDir := path.Join(artifactsDir, "hack-scripts")
 	l.debugf("Extracting hack scripts to directory: %s", hackRootDir)
 	if err := copyDir(l, hack.Scripts, hackRootDir, "."); err != nil {
 		return err
