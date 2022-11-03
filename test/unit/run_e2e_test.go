@@ -15,7 +15,6 @@ func TestRunE2eTests(t *testing.T) {
 		stdout: []check{
 			contains("SETTING UP TEST CLUSTER"),
 			contains("Cluster is gke_deadbeef_1.24"),
-			contains("kubectl wait job --for=condition=Complete --all -n istio-system --timeout=5m"),
 			contains("STARTING KNATIVE SERVING"),
 			contains("Waiting until all pods in namespace knative-serving are up"),
 			contains("E2E TESTS PASSED"),
