@@ -111,7 +111,7 @@ function success() {
   echo "**************************************"
   echo "***        E2E TESTS PASSED        ***"
   echo "**************************************"
-  dump_metrics
+  function_exists on_success && on_success
   exit 0
 }
 
@@ -122,7 +122,8 @@ function fail_test() {
   if [[ "X${message:-}X" == "XX" ]]; then
     message='test failed'
   fi
-  add_trap "dump_cluster_state;dump_metrics" EXIT
+  function_exists on_failure && on_failure
+  add_trap "dump_cluster_state" EXIT
   abort "${message}"
 }
 
