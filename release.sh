@@ -318,7 +318,7 @@ function get_images_in_yamls() {
   for file in $@; do
     [[ "${file##*.}" != "yaml" ]] && continue
     echo "Inspecting ${file}"
-    for image in $(grep -oh "\S*@sha256\S*" "${file}"); do
+    for image in $(grep -oh "\S*${KO_DOCKER_REPO}\S*" "${file}"); do
       echo $image >> imagerefs.txt
     done
   done
