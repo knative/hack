@@ -27,8 +27,6 @@ func TestE2eHelpers(t *testing.T) {
 		retcode: retcode(111),
 		stdout: []check{
 			contains(">> DUMPING THE CLUSTER STATE"),
-			contains(">> STARTING KUBE PROXY"),
-			contains(">> GRABBING K8S METRICS"),
 		},
 	}}
 	for _, tc := range tcs {
