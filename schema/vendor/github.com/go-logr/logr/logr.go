@@ -19,7 +19,8 @@ limitations under the License.
 // appropriate.
 //
 // This design derives from Dave Cheney's blog:
-//     http://dave.cheney.net/2015/11/05/lets-talk-about-logging
+//
+//	http://dave.cheney.net/2015/11/05/lets-talk-about-logging
 //
 // This is a BETA grade API.  Until there is a significant 2nd implementation,
 // I don't really know how it will change.
@@ -27,7 +28,7 @@ limitations under the License.
 // The logging specifically makes it non-trivial to use format strings, to encourage
 // attaching structured information instead of unstructured format strings.
 //
-// Usage
+// # Usage
 //
 // Logging is done using a Logger.  Loggers can have name prefixes and named
 // values attached, so that all log messages logged with that Logger have some
@@ -40,17 +41,19 @@ limitations under the License.
 // we want to log that we've made some decision.
 //
 // With the traditional log package, we might write:
-//  log.Printf(
-//      "decided to set field foo to value %q for object %s/%s",
-//       targetValue, object.Namespace, object.Name)
+//
+//	log.Printf(
+//	    "decided to set field foo to value %q for object %s/%s",
+//	     targetValue, object.Namespace, object.Name)
 //
 // With logr's structured logging, we'd write:
-//  // elsewhere in the file, set up the logger to log with the prefix of "reconcilers",
-//  // and the named value target-type=Foo, for extra context.
-//  log := mainLogger.WithName("reconcilers").WithValues("target-type", "Foo")
 //
-//  // later on...
-//  log.Info("setting field foo on object", "value", targetValue, "object", object)
+//	// elsewhere in the file, set up the logger to log with the prefix of "reconcilers",
+//	// and the named value target-type=Foo, for extra context.
+//	log := mainLogger.WithName("reconcilers").WithValues("target-type", "Foo")
+//
+//	// later on...
+//	log.Info("setting field foo on object", "value", targetValue, "object", object)
 //
 // Depending on our logging implementation, we could then make logging decisions
 // based on field values (like only logging such events for objects in a certain
@@ -59,21 +62,24 @@ limitations under the License.
 // For logging errors, Logger has a method called Error.  Suppose we wanted to
 // log an error while reconciling.  With the traditional log package, we might
 // write:
-//   log.Errorf("unable to reconcile object %s/%s: %v", object.Namespace, object.Name, err)
+//
+//	log.Errorf("unable to reconcile object %s/%s: %v", object.Namespace, object.Name, err)
 //
 // With logr, we'd instead write:
-//   // assuming the above setup for log
-//   log.Error(err, "unable to reconcile object", "object", object)
+//
+//	// assuming the above setup for log
+//	log.Error(err, "unable to reconcile object", "object", object)
 //
 // This functions similarly to:
-//   log.Info("unable to reconcile object", "error", err, "object", object)
+//
+//	log.Info("unable to reconcile object", "error", err, "object", object)
 //
 // However, it ensures that a standard key for the error value ("error") is used
 // across all error logging.  Furthermore, certain implementations may choose to
 // attach additional information (such as stack traces) on calls to Error, so
 // it's preferred to use Error to log errors.
 //
-// Parts of a log line
+// # Parts of a log line
 //
 // Each log message from a Logger has four types of context:
 // logger name, log verbosity, log message, and the named values.
@@ -98,14 +104,14 @@ limitations under the License.
 // Variable information can then be attached using named values (key/value
 // pairs).  Keys are arbitrary strings, while values may be any Go value.
 //
-// Key Naming Conventions
+// # Key Naming Conventions
 //
 // Keys are not strictly required to conform to any specification or regex, but
 // it is recommended that they:
-//   * be human-readable and meaningful (not auto-generated or simple ordinals)
-//   * be constant (not dependent on input data)
-//   * contain only printable characters
-//   * not contain whitespace or punctuation
+//   - be human-readable and meaningful (not auto-generated or simple ordinals)
+//   - be constant (not dependent on input data)
+//   - contain only printable characters
+//   - not contain whitespace or punctuation
 //
 // These guidelines help ensure that log data is processed properly regardless
 // of the log implementation.  For example, log implementations will try to
@@ -115,14 +121,14 @@ limitations under the License.
 // generally best to avoid using the following keys, as they're frequently used
 // by implementations:
 //
-// - `"caller"`: the calling information (file/line) of a particular log line.
-// - `"error"`: the underlying error value in the `Error` method.
-// - `"level"`: the log level.
-// - `"logger"`: the name of the associated logger.
-// - `"msg"`: the log message.
-// - `"stacktrace"`: the stack trace associated with a particular log line or
-//                   error (often from the `Error` message).
-// - `"ts"`: the timestamp for a log line.
+//   - `"caller"`: the calling information (file/line) of a particular log line.
+//   - `"error"`: the underlying error value in the `Error` method.
+//   - `"level"`: the log level.
+//   - `"logger"`: the name of the associated logger.
+//   - `"msg"`: the log message.
+//   - `"stacktrace"`: the stack trace associated with a particular log line or
+//     error (often from the `Error` message).
+//   - `"ts"`: the timestamp for a log line.
 //
 // Implementations are encouraged to make use of these keys to represent the
 // above concepts, when neccessary (for example, in a pure-JSON output form, it
