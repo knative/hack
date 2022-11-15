@@ -126,14 +126,15 @@ function fail_test() {
 # invocation
 TEARDOWN=${TEARDOWN:-0}
 CLOUD_PROVIDER=${CLOUD_PROVIDER:-"gke"}
+E2E_SCRIPT=""
 
 # Parse flags and initialize the test cluster.
 function initialize() {
   local run_tests=0
   local custom_flags=()
   local parse_script_flags=0
-  local e2e_script="$(get_canonical_path "$0")"
-  local e2e_script_command=( "${e2e_script}" "--run-tests" )
+  E2E_SCRIPT="$(get_canonical_path "$0")"
+  local e2e_script_command=( "${E2E_SCRIPT}" "--run-tests" )
 
   for i in "$@"; do
     if [[ $i == "--run-tests" ]]; then parse_script_flags=1; fi
