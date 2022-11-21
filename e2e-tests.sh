@@ -178,7 +178,7 @@ function initialize() {
   done
 
   if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
-      custom_flags+=("--addons=NodeLocalDNS")
+      custom_flags+=("--command-group=") # Use production GKE commands, instead of beta.
   fi
 
   readonly SKIP_DUMP_ON_FAILURE
