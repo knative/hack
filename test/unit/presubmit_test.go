@@ -53,7 +53,6 @@ func TestMainFunc(t *testing.T) {
 				"--enable-workload-identity --cluster-version=latest "+
 				"--extra-gcloud-flags --enable-stackdriver-kubernetes "+
 				"--no-enable-ip-alias --no-enable-autoupgrade "+
-				"--command-group= "+
 				"--test-command=%s/test/e2e-tests.sh "+
 				"--run-tests --extra-gcloud-flags= --logging=NONE "+
 				"--monitoring=NONE", rootDir)),
