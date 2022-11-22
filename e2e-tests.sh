@@ -177,6 +177,10 @@ function initialize() {
     shift
   done
 
+  if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
+      custom_flags+=("--addons=NodeLocalDNS")
+  fi
+
   readonly SKIP_DUMP_ON_FAILURE
   readonly TEARDOWN
   readonly CLOUD_PROVIDER
