@@ -286,6 +286,7 @@ func fakeProwJob() scriptlet {
 		mockBinary("java"),
 		mockBinary("mvn"),
 		mockBinary("ko"),
+		mockBinary("cosign"),
 	)
 }
 
