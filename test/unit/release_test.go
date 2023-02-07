@@ -2,11 +2,52 @@ package unit_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestRelease(t *testing.T) {
+	t.Parallel()
+	tmp := t.TempDir()
+	sc := testReleaseShellScript(
+		envs(map[string]string{
+			"APPLE_CODESIGN_KEY":           randomFile(t, tmp, "codesign.key"),
+			"APPLE_CODESIGN_PASSWORD_FILE": randomFile(t, tmp, "codesign.pass"),
+			"APPLE_NOTARY_API_KEY":         randomFile(t, tmp, "notary.key"),
+			"SIGNING_IDENTITY":             "signer@knative-releases.test",
+		}),
+		loadFile("fake-build-release.bash"),
+	)
+	tcs := []testCase{{
+		name:    "build_from_source",
+		retcode: retcode(0),
+		stderr:  warned("cannot find checksums file"),
+		stdout: []check{
+			contains("Signing Images with the identity signer@knative-releases.test"),
+			contains("Signing checksums with the identity signer@knative-releases.test"),
+			contains("Notarizing macOS Binaries for the release"),
+		},
+	}, {
+		name: "build_from_source (with_checksums)",
+		commands: []string{
+			`export CALCULATE_CHECKSUMS=1`,
+			`build_from_source`,
+		},
+		stdout: []check{
+			contains("Signing Images with the identity signer@knative-releases.test"),
+			contains("Signing checksums with the identity signer@knative-releases.test"),
+			contains("Notarizing macOS Binaries for the release"),
+		},
+	}}
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.name, tc.test(sc))
+	}
+}
 
 func TestReleaseHelperFunctions(t *testing.T) {
 	t.Parallel()
@@ -256,9 +297,22 @@ func TestReleaseFlagParsingDefaults(t *testing.T) {
 	}
 }
 
-func testReleaseShellScript() shellScript {
-	return newShellScript(
+func testReleaseShellScript(scrps ...scriptlet) shellScript {
+	aargs := make([]scriptlet, 0, len(scrps)+3)
+	aargs = append(aargs,
 		fakeProwJob(),
 		loadFile("source-release.bash"),
+		loadFile("fake-presubmit-tests.bash"),
 	)
+	aargs = append(aargs, scrps...)
+	return newShellScript(aargs...)
+}
+
+func randomFile(tb testing.TB, tmpdir string, filename string) string {
+	r := randString(24)
+	fp := path.Join(tmpdir, filename)
+	if err := ioutil.WriteFile(fp, []byte(r), 0o600); err != nil {
+		tb.Fatal(err)
+	}
+	return fp
 }
