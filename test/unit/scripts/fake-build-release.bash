@@ -16,7 +16,7 @@
 
 set -Eeuo pipefail
 
-build_dir="$(mktemp -d)"
+build_dir="${BUILD_DIR:-$(mktemp -d)}"
 export ARTIFACTS_TO_PUBLISH
 
 function build_release() {
@@ -33,7 +33,7 @@ function build_release() {
     foo.yaml
   )
   for artifact_name in "${artifact_names[@]}"; do
-    uuidgen > "${build_dir}/${artifact_name}"
+    hashCode "$artifact_name" > "${build_dir}/${artifact_name}"
     echo "${build_dir}/${artifact_name}" >> "${build_dir}/artifacts.list"
   done
   ARTIFACTS_TO_PUBLISH="$(tr '\r\n' ' ' < "${build_dir}/artifacts.list")"

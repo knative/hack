@@ -351,7 +351,9 @@ function sign_release() {
     echo '>> No checksums file found, generating one'
     checksums_file="$(mktemp -d)/checksums.txt"
     for file in ${ARTIFACTS_TO_PUBLISH}; do
-      sha256sum "${file}" >> "${checksums_file}"
+      pushd "$(dirname "$file")" >/dev/null
+      sha256sum "$(basename "$file")" >> "${checksums_file}"
+      popd >/dev/null
     done
     ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH} ${checksums_file}"
   fi
@@ -382,7 +384,9 @@ function sign_release() {
         if echo "$file" | grep -q "checksums.txt"; then
           continue # Don't checksum the checksums file
         fi
-        sha256sum "${file}" >> "${checksums_file}"
+        pushd "$(dirname "$file")" >/dev/null
+        sha256sum "$(basename "$file")" >> "${checksums_file}"
+        popd >/dev/null
       done
       echo "🧮     Post Notarization Checksum:"
       cat "$checksums_file"
