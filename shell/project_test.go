@@ -17,7 +17,7 @@ limitations under the License.
 package shell_test
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 
@@ -29,7 +29,7 @@ func TestNewProjectLocation(t *testing.T) {
 	loc, err := shell.NewProjectLocation("..")
 	assert.NoError(err)
 	goModPath := path.Join(loc.RootPath(), "go.mod")
-	bytes, err := ioutil.ReadFile(goModPath)
+	bytes, err := os.ReadFile(goModPath)
 	assert.NoError(err)
 	assert.Contains(string(bytes), "module knative.dev/hack")
 }
