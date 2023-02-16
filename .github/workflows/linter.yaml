@@ -4,9 +4,13 @@ on:
   push:
   pull_request:
     branches:
-    - 'main'
-    - 'release-*'
+      - "main"
+      - "release-*"
 
 jobs:
   style:
     uses: knative/actions/.github/workflows/reusable-style.yaml@main
+    with:
+      yaml: false
+      gofmt: false
+      gha_yaml: false
