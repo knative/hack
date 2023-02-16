@@ -10,7 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRelease(t *testing.T) {
+var CantFindChecksums = warned("cannot find checksums file")
+
+func TestBuildFromSource(t *testing.T) {
 	t.Parallel()
 
 	outChecks := []check{
@@ -31,7 +33,7 @@ func TestRelease(t *testing.T) {
 	tcs := []testCase{{
 		name:    "build_from_source",
 		retcode: retcode(0),
-		stderr:  warned("cannot find checksums file"),
+		stderr:  CantFindChecksums,
 		stdout:  outChecks,
 	}, {
 		name: "build_from_source (with_checksums)",
@@ -57,6 +59,50 @@ func TestRelease(t *testing.T) {
 			)
 			tc.test(sc)(t)
 		})
+	}
+}
+
+func TestFindChecksumsFile(t *testing.T) {
+	t.Parallel()
+
+	foundChecksums := lines("/tmp/other/checksums.txt")
+
+	tcs := []testCase{{
+		name:    "find_checksums_file /tmp/file1.out /tmp/file2.out",
+		retcode: retcode(0),
+		stderr:  CantFindChecksums,
+		stdout:  empty(),
+	}, {
+		name:   "find_checksums_file /tmp/file1.out /tmp/other/checksums.txt /tmp/file2.out",
+		stdout: foundChecksums,
+	}, {
+		name: `find_checksums_file "$ARTIFACTS_TO_PUBLISH"`,
+		commands: []string{
+			`export ARTIFACTS_TO_PUBLISH="/tmp/file1.out /tmp/other/checksums.txt /tmp/file2.out"`,
+			`find_checksums_file "$ARTIFACTS_TO_PUBLISH"`,
+		},
+		stdout: foundChecksums,
+	}, {
+		name:    `find_checksums_file "$ARTIFACTS_TO_PUBLISH" # without checksums in artifacts`,
+		retcode: retcode(0),
+		commands: []string{
+			`export ARTIFACTS_TO_PUBLISH="/tmp/file1.out /tmp/file2.out"`,
+			`find_checksums_file "$ARTIFACTS_TO_PUBLISH"`,
+		},
+		stderr: CantFindChecksums,
+		stdout: empty(),
+	}, {
+		name: `find_checksums_file "$ARTIFACTS_TO_PUBLISH" # with double spaces`,
+		commands: []string{
+			`export ARTIFACTS_TO_PUBLISH="/tmp/file1.out  /tmp/other/checksums.txt /tmp/file2.out"`,
+			`find_checksums_file "$ARTIFACTS_TO_PUBLISH"`,
+		},
+		stdout: foundChecksums,
+	}}
+	sc := testReleaseShellScript(loadFile("fake-build-release.bash"))
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.name, tc.test(sc))
 	}
 }
 
