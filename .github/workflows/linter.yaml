@@ -1,0 +1,7 @@
+name: Linter
+
+on: [pull_request]
+
+jobs:
+  style:
+    uses: knative/actions/.github/workflows/reusable-style.yaml@main
