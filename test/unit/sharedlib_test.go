@@ -261,8 +261,8 @@ func (a anyArgs) String() string {
 }
 
 func mockGo(responses ...response) scriptlet {
-	lstags := "knative.dev/toolbox/go-ls-tags@latest"
-	modscope := "knative.dev/toolbox/modscope@latest"
+	lstags := "knative.dev/test-infra/tools/go-ls-tags@latest"
+	modscope := "knative.dev/test-infra/tools/modscope@latest"
 	callOriginals := []args{
 		startsWith{"run " + lstags},
 		startsWith{"run " + modscope},
