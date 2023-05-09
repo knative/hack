@@ -2,14 +2,13 @@ package unit_test
 
 import (
 	"fmt"
-	"path"
 	"strings"
 	"testing"
 )
 
 func TestMainFunc(t *testing.T) {
 	t.Parallel()
-	rootDir := path.Dir(path.Dir(currentDir()))
+	// rootDir := path.Dir(path.Dir(currentDir()))
 	sc := newShellScript(
 		fakeProwJob(),
 		loadFile("source-presubmit-tests.bash"),

@@ -19,8 +19,6 @@
 
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/infra-library.sh"
 
-readonly TEST_RESULT_FILE=/tmp/${REPO_NAME}-e2e-result
-
 # Tear down the test resources.
 function teardown_test_resources() {
   header "Tearing down test environment"
