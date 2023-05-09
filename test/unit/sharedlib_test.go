@@ -305,6 +305,7 @@ func fakeProwJob() scriptlet {
 		mockBinary("cosign"),
 		mockBinary("rcodesign"),
 		mockBinary("gsutil"),
+		mockBinary("kubetest2"),
 	)
 }
 
