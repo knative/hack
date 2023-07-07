@@ -32,13 +32,13 @@ func TestUpdateDeps(t *testing.T) {
 	}, {
 		name: "go_update_deps --upgrade",
 		stdout: []check{
-			contains("go run knative.dev/test-infra/buoy@latest float ./go.mod " +
+			contains("go run knative.dev/toolbox/buoy@latest float ./go.mod " +
 				"--release v9000.1 --domain knative.dev"),
 		},
 	}, {
 		name: "go_update_deps --upgrade --release 1.25 --module-release 0.28",
 		stdout: []check{
-			contains("go run knative.dev/test-infra/buoy@latest float ./go.mod " +
+			contains("go run knative.dev/toolbox/buoy@latest float ./go.mod " +
 				"--release 1.25 --domain knative.dev --module-release 0.28"),
 		},
 	}}
