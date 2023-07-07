@@ -778,7 +778,7 @@ function go_mod_gopath_hack() {
 # Run kntest tool
 # Parameters: $1..$n - parameters passed to the tool.
 function run_kntest() {
-  go_run knative.dev/toolbox/kntest/cmd/kntest@latest "$@"
+  go_run knative.dev/test-infra/tools/kntest/cmd/kntest@latest "$@"
 }
 
 # Run go-licenses to update licenses.
