@@ -27,7 +27,7 @@ func TestMainFunc(t *testing.T) {
 			contains("go test -vet=off -tags e2e,hack,library -exec echo ./..."),
 			contains("go test -vet=off -tags e2e,library -exec echo ./..."),
 			contains("go test -vet=off -tags  -exec echo ./..."),
-			contains("go run knative.dev/toolbox/kntest/cmd/kntest@latest" +
+			contains("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
 				" junit --suite=_build_tests --name=Check_Licenses --err-msg= --dest="),
 			contains("BUILD TESTS PASSED"),
 		},
@@ -48,7 +48,7 @@ func TestMainFunc(t *testing.T) {
 		stdout: []check{
 			contains("RUNNING INTEGRATION TESTS"),
 			contains("Running integration test test/e2e-tests.sh"),
-			contains(fmt.Sprintf("go run knative.dev/toolbox/kntest/cmd/kntest@latest"+
+			contains(fmt.Sprintf("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest"+
 				" kubetest2 gke --max-nodes=1 --machine=e2-standard-2 "+
 				"--enable-workload-identity --cluster-version=latest "+
 				"--extra-gcloud-flags --enable-stackdriver-kubernetes "+
