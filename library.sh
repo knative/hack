@@ -283,7 +283,7 @@ function wait_until_pods_running() {
       # All Pods are running or completed. Verify the containers on each Pod.
       local all_ready=1
       while read pod ; do
-        local status=($(echo -n "${pod}" | cut -f2 -d' ' | tr '/' ' '))
+        local status=$(echo -n "${pod}" | cut -f2 -d' ' | tr '/' ' ')
         # Set this Pod as the failed_pod. If nothing is wrong with it, then after the checks, set
         # failed_pod to the empty string.
         failed_pod=$(echo -n "${pod}" | cut -f1 -d' ')
@@ -310,9 +310,9 @@ function wait_until_pods_running() {
   echo -e "\n\nERROR: timeout waiting for pods to come up\n${pods}"
   if [[ -n "${failed_pod}" ]]; then
     echo -e "\n\nFailed Pod (data in YAML format) - ${failed_pod}\n"
-    kubectl -n $1 get pods "${failed_pod}" -oyaml
+    kubectl -n "$1" get pods "${failed_pod}" -oyaml
     echo -e "\n\nPod Logs\n"
-    kubectl -n $1 logs "${failed_pod}" --all-containers
+    kubectl -n "$1" logs "${failed_pod}" --all-containers
   fi
   return 1
 }
@@ -330,12 +330,12 @@ function wait_until_batch_job_complete() {
 function wait_until_service_has_external_ip() {
   echo -n "Waiting until service $2 in namespace $1 has an external address (IP/hostname)"
   for i in {1..150}; do  # timeout after 15 minutes
-    local ip=$(kubectl get svc -n $1 $2 -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+    local ip=$(kubectl get svc -n "$1" "$2" -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
     if [[ -n "${ip}" ]]; then
       echo -e "\nService $2.$1 has IP $ip"
       return 0
     fi
-    local hostname=$(kubectl get svc -n $1 $2 -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+    local hostname=$(kubectl get svc -n "$1" "$2" -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
     if [[ -n "${hostname}" ]]; then
       echo -e "\nService $2.$1 has hostname $hostname"
       return 0
@@ -344,7 +344,7 @@ function wait_until_service_has_external_ip() {
     sleep 6
   done
   echo -e "\n\nERROR: timeout waiting for service $2.$1 to have an external address"
-  kubectl get pods -n $1
+  kubectl get pods -n "$1"
   return 1
 }
 
@@ -359,11 +359,11 @@ function wait_until_service_has_external_http_address() {
 
   echo -n "Waiting until service $ns/$svc has an external address (IP/hostname)"
   for attempt in $(seq 1 $attempts); do  # timeout after 15 minutes
-    local address=$(kubectl get svc $svc -n $ns -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+    local address=$(kubectl get svc "$svc" -n "$ns" -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
     if [[ -n "${address}" ]]; then
       echo -e "Service $ns/$svc has IP $address"
     else
-      address=$(kubectl get svc $svc -n $ns -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+      address=$(kubectl get svc "$svc" -n "$ns" -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
       if [[ -n "${address}" ]]; then
         echo -e "Service $ns/$svc has hostname $address"
       fi
@@ -406,7 +406,7 @@ function wait_until_routable() {
 # Parameters: $1 - app name.
 #             $2 - namespace (optional).
 function get_app_pod() {
-  local pods=($(get_app_pods $1 $2))
+  local pods=($(get_app_pods "$1" "$2"))
   echo "${pods[0]}"
 }
 
@@ -416,7 +416,7 @@ function get_app_pod() {
 function get_app_pods() {
   local namespace=""
   [[ -n $2 ]] && namespace="-n $2"
-  kubectl get pods ${namespace} --selector=app=$1 --output=jsonpath="{.items[*].metadata.name}"
+  kubectl get pods "${namespace}" --selector=app="$1" --output=jsonpath="{.items[*].metadata.name}"
 }
 
 # Capitalize the first letter of each word.
@@ -424,7 +424,7 @@ function get_app_pods() {
 function capitalize() {
   local capitalized=()
   for word in $@; do
-    local initial="$(echo ${word:0:1}| tr 'a-z' 'A-Z')"
+    local initial="$(echo "${word:0:1}"| tr 'a-z' 'A-Z')"
     capitalized+=("${initial}${word:1}")
   done
   echo "${capitalized[@]}"
