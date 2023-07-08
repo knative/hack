@@ -163,7 +163,7 @@ function make_banner() {
 
 # Simple header for logging purposes.
 function header() {
-  local upper="$(echo $1 | tr a-z A-Z)"
+  local upper="$(echo "$1" | tr a-z A-Z)"
   make_banner "=" "${upper}"
 }
 
@@ -179,7 +179,7 @@ function warning() {
 
 # Checks whether the given function exists.
 function function_exists() {
-  [[ "$(type -t $1)" == "function" ]]
+  [[ "$(type -t "$1")" == "function" ]]
 }
 
 # GitHub Actions aware output grouping.
@@ -227,7 +227,7 @@ function wait_until_object_does_not_exist() {
   fi
   echo -n "Waiting until ${DESCRIPTION} does not exist"
   for i in {1..150}; do  # timeout after 5 minutes
-    if ! kubectl ${KUBECTL_ARGS} > /dev/null 2>&1; then
+    if ! kubectl "${KUBECTL_ARGS}" > /dev/null 2>&1; then
       echo -e "\n${DESCRIPTION} does not exist"
       return 0
     fi
@@ -235,7 +235,7 @@ function wait_until_object_does_not_exist() {
     sleep 2
   done
   echo -e "\n\nERROR: timeout waiting for ${DESCRIPTION} not to exist"
-  kubectl ${KUBECTL_ARGS}
+  kubectl "${KUBECTL_ARGS}"
   return 1
 }
 
@@ -253,7 +253,7 @@ function wait_until_object_exists() {
   fi
   echo -n "Waiting until ${DESCRIPTION} exists"
   for i in {1..150}; do  # timeout after 5 minutes
-    if kubectl ${KUBECTL_ARGS} > /dev/null 2>&1; then
+    if kubectl "${KUBECTL_ARGS}" > /dev/null 2>&1; then
       echo -e "\n${DESCRIPTION} exists"
       return 0
     fi
@@ -261,7 +261,7 @@ function wait_until_object_exists() {
     sleep 2
   done
   echo -e "\n\nERROR: timeout waiting for ${DESCRIPTION} to exist"
-  kubectl ${KUBECTL_ARGS}
+  kubectl "${KUBECTL_ARGS}"
   return 1
 }
 
@@ -276,14 +276,14 @@ function wait_until_pods_running() {
   for i in {1..150}; do  # timeout after 5 minutes
     # List all pods. Ignore Terminating pods as those have either been replaced through
     # a deployment or terminated on purpose (through chaosduck for example).
-    local pods="$(kubectl get pods --no-headers -n $1 | grep -v Terminating)"
+    local pods="$(kubectl get pods --no-headers -n "$1" | grep -v Terminating)"
     # All pods must be running (ignore ImagePull error to allow the pod to retry)
     local not_running_pods=$(echo "${pods}" | grep -v Running | grep -v Completed | grep -v ErrImagePull | grep -v ImagePullBackOff)
     if [[ -n "${pods}" ]] && [[ -z "${not_running_pods}" ]]; then
       # All Pods are running or completed. Verify the containers on each Pod.
       local all_ready=1
       while read pod ; do
-        local status=(`echo -n ${pod} | cut -f2 -d' ' | tr '/' ' '`)
+        local status=($(echo -n "${pod}" | cut -f2 -d' ' | tr '/' ' '))
         # Set this Pod as the failed_pod. If nothing is wrong with it, then after the checks, set
         # failed_pod to the empty string.
         failed_pod=$(echo -n "${pod}" | cut -f1 -d' ')
