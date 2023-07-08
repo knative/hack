@@ -283,7 +283,7 @@ function wait_until_pods_running() {
       # All Pods are running or completed. Verify the containers on each Pod.
       local all_ready=1
       while read pod ; do
-        local status=$(echo -n "${pod}" | cut -f2 -d' ' | tr '/' ' ')
+        local status=(`echo -n ${pod} | cut -f2 -d' ' | tr '/' ' '`)
         # Set this Pod as the failed_pod. If nothing is wrong with it, then after the checks, set
         # failed_pod to the empty string.
         failed_pod=$(echo -n "${pod}" | cut -f1 -d' ')
