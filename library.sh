@@ -47,7 +47,6 @@ function __resolveRepoName() {
   local repoName
   repoName="$(basename "${1:-$(git rev-parse --show-toplevel)}")"
   repoName="${repoName#knative-extensions-}" # Remove knative-extensions- prefix if any
-  repoName="${repoName#knative-sandbox-}" # Remove knative-sandbox- prefix if any
   repoName="${repoName#knative-}" # Remove knative- prefix if any
   echo "${repoName}"
 }
