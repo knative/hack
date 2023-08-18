@@ -8,7 +8,6 @@ import (
 
 func TestMainFunc(t *testing.T) {
 	t.Parallel()
-	// rootDir := path.Dir(path.Dir(currentDir()))
 	sc := newShellScript(
 		fakeProwJob(),
 		loadFile("source-presubmit-tests.bash"),
@@ -43,23 +42,6 @@ func TestMainFunc(t *testing.T) {
 			contains("UNIT TESTS PASSED"),
 		},
 	},
-	//{
-	// 	name: `main --integration-tests`,
-	// 	stdout: []check{
-	// 		contains("RUNNING INTEGRATION TESTS"),
-	// 		contains("Running integration test test/e2e-tests.sh"),
-	// 		contains(fmt.Sprintf("kubetest2 gke "+
-	// 			"--num-nodes=1 --machine=e2-standard-2 "+
-	// 			"--enable-workload-identity --cluster-version=latest "+
-	// 			"--extra-gcloud-flags --enable-stackdriver-kubernetes "+
-	// 			"--no-enable-ip-alias --no-enable-autoupgrade "+
-	// 			"--addons=NodeLocalDNS "+
-	// 			"--test-command=%s/test/e2e-tests.sh "+
-	// 			"--run-tests --extra-gcloud-flags= --logging=NONE "+
-	// 			"--monitoring=NONE", rootDir)),
-	// 		contains("INTEGRATION TESTS PASSED"),
-	// 	},
-	// }}
 	}
 	for _, tc := range tcs {
 		tc := tc
