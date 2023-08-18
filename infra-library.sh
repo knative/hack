@@ -131,6 +131,10 @@ function create_gke_test_cluster() {
     _extra_gcloud_flags+=("--logging=NONE --monitoring=NONE")
   fi
 
+  if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
+      extra_gcloud_flags+=("--addons=NodeLocalDNS")
+  fi
+
   if [[ "${ENABLE_PREEMPTIBLE_NODES:-}" == "true" ]]; then
     _extra_gcloud_flags+=("--preemptible")
   fi
@@ -145,10 +149,18 @@ function create_gke_test_cluster() {
   if [[ ! " ${_custom_flags[*]} " =~ "--machine-type=" ]]; then
       _custom_flags+=("--machine-type=e2-standard-4")
   fi
-  kubetest2 gke "${_custom_flags[@]}" --rundir-in-artifacts --up --down \
-    --boskos-heartbeat-interval-seconds=20 --v=1 \
-    --network=e2e-network --boskos-acquire-timeout-seconds=1200 \
-    --region="${E2E_CLUSTER_REGION},us-east1,us-west1" --gcloud-extra-flags="${_extra_gcloud_flags[*]}" \
+  kubetest2 gke "${_custom_flags[@]}" \
+    --rundir-in-artifacts \
+    --up \
+    --down \
+    --boskos-heartbeat-interval-seconds=20 \
+    --v=1 \
+    --network=e2e-network \
+    --boskos-acquire-timeout-seconds=1200 \
+    --region="${E2E_CLUSTER_REGION},us-east1,us-west1" \
+    --gcloud-extra-flags="${_extra_gcloud_flags[*]}" \
     --retryable-error-patterns='.*does not have enough resources available to fulfill.*,.*only \\d+ nodes out of \\d+ have registered; this is likely due to Nodes failing to start correctly.*,.*All cluster resources were brought up.+ but: component .+ from endpoint .+ is unhealthy.*' \
-    --test=exec -- "${_test_command[@]}"
+    --test=exec \
+    -- \
+    "${_test_command[@]}"
 }
