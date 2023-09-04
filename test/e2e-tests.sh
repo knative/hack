@@ -45,9 +45,9 @@ function dump_metrics() {
 }
 
 # Script entry point.
-initialize "$@" --max-nodes=1 --machine=e2-standard-2 \
+initialize "$@" --num-nodes=1 --machine-type=e2-standard-4 \
   --enable-workload-identity --cluster-version=latest \
-  --extra-gcloud-flags "--enable-stackdriver-kubernetes --no-enable-ip-alias --no-enable-autoupgrade"
+  --gcloud-extra-flags "--logging=NONE --monitoring=NONE"
 
 [[ ${KNATIVE_SETUP_DONE:-0} == 1 ]] || fail_test 'Knative setup not persisted'
 [[ ${TEST_SETUP_DONE:-0} == 1 ]] || fail_test 'Test setup not persisted'

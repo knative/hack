@@ -30,6 +30,11 @@ func aborted(msg string) []check {
 	return equal(makeBanner('*', fmsg))
 }
 
+func warned(msg string) []check {
+	fmsg := fmt.Sprintf("WARN: %s", msg)
+	return equal(makeBanner('!', fmsg))
+}
+
 func makeBanner(ch rune, msg string) string {
 	const span = 4
 	border := strings.Repeat(string(ch), len(msg)+span*2+2)
@@ -169,6 +174,14 @@ func loadFile(names ...string) scriptlet {
 	})
 }
 
+func envs(envs map[string]string) scriptlet {
+	instr := make([]string, 0, len(envs))
+	for k, v := range envs {
+		instr = append(instr, fmt.Sprintf(`export %s="%s"`, k, v))
+	}
+	return instructions(instr...)
+}
+
 func instructions(inst ...string) scriptlet {
 	return fnScriptlet(func(t TestingT) string {
 		return strings.Join(inst, "\n")
@@ -248,8 +261,8 @@ func (a anyArgs) String() string {
 }
 
 func mockGo(responses ...response) scriptlet {
-	lstags := "knative.dev/test-infra/tools/go-ls-tags@latest"
-	modscope := "knative.dev/test-infra/tools/modscope@latest"
+	lstags := "knative.dev/toolbox/go-ls-tags@latest"
+	modscope := "knative.dev/toolbox/modscope@latest"
 	callOriginals := []args{
 		startsWith{"run " + lstags},
 		startsWith{"run " + modscope},
@@ -283,10 +296,17 @@ func mockKubectl(responses ...response) scriptlet {
 func fakeProwJob() scriptlet {
 	return union(
 		loadFile("fake-prow-job.bash"),
-		mockBinary("gcloud"),
+		mockBinary("gcloud", response{
+			startsWith{"auth print-identity-token"},
+			simply("F4KE-T0K3N-3B49"),
+		}),
 		mockBinary("java"),
 		mockBinary("mvn"),
 		mockBinary("ko"),
+		mockBinary("cosign"),
+		mockBinary("rcodesign"),
+		mockBinary("gsutil"),
+		mockBinary("kubetest2"),
 	)
 }
 

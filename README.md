@@ -96,7 +96,7 @@ main "$@"
 This is a helper script for Knative E2E test scripts. To use it:
 
 1. [optional] Customize the test cluster. Pass the flags as described
-   [here](../tools/kntest/pkg/kubetest2/gke/README.md) to the `initialize` function
+   [here](https://github.com/knative/toolbox/blob/main/kntest/pkg/kubetest2/gke/README.md) to the `initialize` function
    call if the default values don't fit your needs.
 
 1. Source the script.
@@ -122,6 +122,10 @@ This is a helper script for Knative E2E test scripts. To use it:
 1. [optional] Write the `dump_extra_cluster_state()` function. It will be called
    when a test fails, and can dump extra information about the current state of
    the cluster (typically using `kubectl`).
+
+1. [optional] Write the `on_success` function. It will be called when a test succeeds
+
+1. [optional] Write the `on_failure` function. It will be called when a test fails
 
 1. [optional] Write the `parse_flags()` function. It will be called whenever an
    unrecognized flag is passed to the script, allowing you to define your own
