@@ -16,7 +16,10 @@
 
 set -Eeo pipefail
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/../e2e-tests.sh"
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." > /dev/null
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script e2e-tests.sh)"
+popd > /dev/null
 
 export INGRESS_CLASS=${INGRESS_CLASS:-istio.ingress.networking.knative.dev}
 

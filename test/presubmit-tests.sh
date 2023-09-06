@@ -23,7 +23,10 @@
 
 set -Eeuo pipefail
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/../presubmit-tests.sh"
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." > /dev/null
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script presubmit-tests.sh)"
+popd > /dev/null
 
 # Run our custom build tests after the standard build tests.
 

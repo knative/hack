@@ -10,6 +10,9 @@ github.com/pmezard/go-difflib/difflib
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/thanhpk/randstr v1.0.4
+## explicit
+github.com/thanhpk/randstr
 # gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 ## explicit
 # gopkg.in/yaml.v3 v3.0.1

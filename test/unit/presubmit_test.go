@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/thanhpk/randstr"
 )
 
 func TestMainFunc(t *testing.T) {
@@ -22,7 +24,6 @@ func TestMainFunc(t *testing.T) {
 			contains("Build tests for knative.dev/hack/schema"),
 			contains("Build tests for knative.dev/hack"),
 			contains("Checking that go code builds"),
-			contains("go test -vet=off -tags e2e,hack,library -exec echo ./..."),
 			contains("go test -vet=off -tags e2e,library -exec echo ./..."),
 			contains("go test -vet=off -tags  -exec echo ./..."),
 			contains("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
@@ -97,8 +98,8 @@ func TestPrType(t *testing.T) {
 
 func TestCustomAndMultiScript(t *testing.T) {
 	t.Parallel()
-	rng1 := randString(12)
-	rng2 := randString(12)
+	rng1 := randstr.String(12)
+	rng2 := randstr.String(12)
 	sc := newShellScript(
 		fakeProwJob(),
 		loadFile("source-presubmit-tests.bash"),

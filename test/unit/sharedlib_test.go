@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/thanhpk/randstr"
 )
 
 var (
@@ -266,6 +266,7 @@ func mockGo(responses ...response) scriptlet {
 	callOriginals := []args{
 		startsWith{"run " + lstags},
 		startsWith{"run " + modscope},
+		startsWith{"run ./"},
 		startsWith{"list"},
 		startsWith{"env"},
 		startsWith{"version"},
@@ -352,6 +353,7 @@ func (s shellScript) source(t TestingT, commands []string) string {
 set -Eeuo pipefail
 export TMPPATH='%s'
 export PATH="${TMPPATH}:${PATH}"
+export KNATIVE_HACK_SCRIPT_MANUAL_VERBOSE=true
 `, t.TempDir())
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
@@ -374,7 +376,7 @@ export PATH="${TMPPATH}:${PATH}"
 
 func (s shellScript) write(t TestingT, src string) string {
 	dir := currentDir()
-	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", randString(12)))
+	p := path.Join(dir, fmt.Sprintf("unittest-%s.bash", randstr.String(12)))
 	err := os.WriteFile(p, []byte(src), 0o600)
 	require.NoError(t, err)
 	return p
@@ -443,13 +445,4 @@ func (s shellScript) prefetch(t TestingT) {
 func currentDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	return path.Dir(file)
-}
-
-func randString(n int) string {
-	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
 }

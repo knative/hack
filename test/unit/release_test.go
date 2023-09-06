@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/thanhpk/randstr"
 )
 
 var CantFindChecksums = warned("cannot find checksums file")
@@ -263,7 +264,7 @@ func TestReleaseFlagParsingNightly(t *testing.T) {
 func TestReleaseFlagParsingGithubToken(t *testing.T) {
 	t.Parallel()
 	tmpfile := t.TempDir() + "/github.token"
-	token := randString(12)
+	token := randstr.String(12)
 	err := os.WriteFile(tmpfile, []byte(token+"\n"), 0o600)
 	require.NoError(t, err)
 	sc := testReleaseShellScript()
@@ -366,7 +367,7 @@ func testReleaseShellScript(scrps ...scriptlet) shellScript {
 }
 
 func randomFile(tb testing.TB, tmpdir string, filename string) string {
-	r := randString(24)
+	r := randstr.String(24)
 	fp := path.Join(tmpdir, filename)
 	if err := ioutil.WriteFile(fp, []byte(r), 0o600); err != nil {
 		tb.Fatal(err)
