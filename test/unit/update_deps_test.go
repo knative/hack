@@ -26,7 +26,7 @@ func TestUpdateDeps(t *testing.T) {
 			contains("Removing unwanted vendor files"),
 			contains("go mod tidy"),
 			contains("go mod vendor"),
-			contains("go run github.com/google/go-licenses@v1.2.1 save ./... " +
+			contains("go run github.com/google/go-licenses@v1.6.0 save ./... " +
 				"--save_path=third_party/VENDOR-LICENSE --force"),
 		},
 	}, {
