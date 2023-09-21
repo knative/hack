@@ -688,6 +688,10 @@ function __clean_goworksum_if_exists() {
 }
 
 function __remove_goworksum_if_empty() {
+  if [ -f "$REPO_ROOT_DIR/go.work" ]; then
+    echo "=== Syncing the go workspace"
+    go work sync
+  fi
   if ! [ -s "$REPO_ROOT_DIR/go.work.sum" ]; then
     echo "=== Removing empty go.work.sum"
     rm -f "$REPO_ROOT_DIR/go.work.sum"
