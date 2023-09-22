@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	hack "knative.dev/hack"
+	"knative.dev/hack"
 )
 
 const (

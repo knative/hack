@@ -16,6 +16,13 @@ func Calc(err error) int {
 	if err == nil {
 		return 0
 	}
+	if r, ok := err.(retcodeErr); ok {
+		return r.Retcode()
+	}
 	upper := UpperBound - LowerBound
 	return int(crc32.ChecksumIEEE([]byte(err.Error())))%upper + LowerBound
+}
+
+type retcodeErr interface {
+	Retcode() int
 }

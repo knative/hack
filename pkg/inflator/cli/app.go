@@ -32,26 +32,6 @@ func ExecuteOrDie(opts ...Option) {
 	}
 }
 
-type usageErr struct{}
-
-func (u usageErr) Error() string {
-	return `Hacks as Go self-extracting binary
-
-Will extract Hack scripts to a temporary directory, and provide a source
-file path to requested shell script.
-
-# In Bash script
-source "$(go run knative.dev/hack/cmd/script@latest library.sh)"
-
-Usage:
-	script [flags] library.sh
-
-Flags:
-	-h, --help      help
-	-v, --verbose   verbose output
-`
-}
-
 func createOperation(fl *flags, argv []string) extract.Operation {
 	return extract.Operation{
 		ScriptName: argv[0],

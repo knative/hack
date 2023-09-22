@@ -27,7 +27,7 @@ import (
 
 func TestMainFn(t *testing.T) {
 	var buf bytes.Buffer
-	var retcode *int
+	var retcode = -1_234_567_890 // nolint:gomnd // gate value
 	withOptions(
 		func() {
 			main.RunMain()
@@ -37,12 +37,12 @@ func TestMainFn(t *testing.T) {
 			ex.Stderr = &buf
 			ex.Args = []string{"--help"}
 			ex.Exit = func(c int) {
-				retcode = &c
+				retcode = c
 			}
 		},
 	)
-	assert.Nil(t, retcode)
-	assert.ContainsSubstring(t, buf.String(), "Script will extract Hack scripts")
+	assert.Equal(t, 0, retcode)
+	assert.ContainsSubstring(t, buf.String(), "Hacks as Go self-extracting binary")
 }
 
 func withOptions(fn func(), options ...cli.Option) {
