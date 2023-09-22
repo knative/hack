@@ -16,13 +16,10 @@ limitations under the License.
 
 package main
 
-import (
-	"github.com/wavesoftware/go-commandline"
-	"knative.dev/hack/pkg/inflator/cli"
-)
+import "knative.dev/hack/pkg/inflator/cli"
 
 func main() {
-	commandline.New(new(cli.App)).ExecuteOrDie(cli.Options...)
+	cli.ExecuteOrDie(cli.Options...)
 }
 
 // RunMain is used by tests to run the main function.

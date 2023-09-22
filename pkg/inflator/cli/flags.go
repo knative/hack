@@ -3,8 +3,6 @@ package cli
 import (
 	"os"
 	"strings"
-
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -17,10 +15,25 @@ type flags struct {
 	verbose bool
 }
 
-func (f *flags) withFlags(c *cobra.Command) *cobra.Command {
-	fl := c.PersistentFlags()
-	fl.BoolVarP(&f.verbose, "verbose", "v", isCiServer(), "Print verbose output on Stderr")
-	return c
+func parseArgs(ex *Execution) (*flags, error) {
+	f := flags{
+		verbose: isCiServer(),
+	}
+	if len(ex.Args) == 0 {
+		return nil, usageErr{}
+	}
+	for i := 0; i < len(ex.Args); i++ {
+		if ex.Args[i] == "-v" || ex.Args[i] == "--verbose" {
+			f.verbose = true
+			ex.Args = append(ex.Args[:i], ex.Args[i+1:]...)
+			i--
+		}
+
+		if ex.Args[i] == "-h" || ex.Args[i] == "--help" {
+			return nil, usageErr{}
+		}
+	}
+	return &f, nil
 }
 
 func isCiServer() bool {
