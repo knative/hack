@@ -4,27 +4,28 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"knative.dev/hack/pkg/inflator/cli"
 	"knative.dev/hack/pkg/inflator/extract"
+	"knative.dev/hack/pkg/utest/assert"
+	"knative.dev/hack/pkg/utest/require"
 )
 
-func TestApp(t *testing.T) {
+func TestExecute(t *testing.T) {
 	tmpdir := t.TempDir()
 	t.Setenv(extract.HackScriptsDirEnvVar, tmpdir)
 	t.Setenv(cli.ManualVerboseEnvVar, "true")
-	c := cli.App{}.Command()
 	var (
 		outb bytes.Buffer
 		errb bytes.Buffer
 	)
-	c.SetOut(&outb)
-	c.SetErr(&errb)
-	c.SetArgs([]string{"e2e-tests.sh"})
-	err := c.Execute()
 
-	require.NoError(t, err)
+	r := cli.Execute([]cli.Option{func(ex *cli.Execution) {
+		ex.Args = []string{"e2e-tests.sh"}
+		ex.Stdout = &outb
+		ex.Stderr = &errb
+	}})
+
+	require.NoError(t, r.Err)
 	assert.Equal(t, outb.String(), tmpdir+"/e2e-tests.sh\n")
 	assert.Equal(t, errb.String(), "")
 }

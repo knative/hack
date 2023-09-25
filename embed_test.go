@@ -19,9 +19,9 @@ package hack_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"knative.dev/hack"
+	"knative.dev/hack/pkg/utest/assert"
+	"knative.dev/hack/pkg/utest/require"
 )
 
 func TestScriptsAreEmbedded(t *testing.T) {

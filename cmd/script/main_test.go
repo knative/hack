@@ -20,33 +20,35 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/wavesoftware/go-commandline"
 	main "knative.dev/hack/cmd/script"
 	"knative.dev/hack/pkg/inflator/cli"
+	"knative.dev/hack/pkg/utest/assert"
 )
 
 func TestMainFn(t *testing.T) {
 	var buf bytes.Buffer
-	var retcode *int
+	var retcode = -1_234_567_890 // nolint:gomnd // gate value
 	withOptions(
 		func() {
 			main.RunMain()
 		},
-		commandline.WithArgs("--help"),
-		commandline.WithOutput(&buf),
-		commandline.WithExit(func(c int) {
-			retcode = &c
-		}),
+		func(ex *cli.Execution) {
+			ex.Stdout = &buf
+			ex.Stderr = &buf
+			ex.Args = []string{"--help"}
+			ex.Exit = func(c int) {
+				retcode = c
+			}
+		},
 	)
-	assert.Nil(t, retcode)
-	assert.Contains(t, buf.String(), "Script will extract Hack scripts")
+	assert.Equal(t, 0, retcode)
+	assert.ContainsSubstring(t, buf.String(), "Hacks as Go self-extracting binary")
 }
 
-func withOptions(fn func(), options ...commandline.Option) {
+func withOptions(fn func(), options ...cli.Option) {
 	prev := cli.Options
 	cli.Options = options
-	defer func(p []commandline.Option) {
+	defer func(p []cli.Option) {
 		cli.Options = p
 	}(prev)
 	fn()

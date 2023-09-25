@@ -1,37 +1,35 @@
 package cli
 
 import (
-	"os"
+	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/wavesoftware/go-commandline"
 	"knative.dev/hack/pkg/inflator/extract"
+	"knative.dev/hack/pkg/retcode"
 )
 
-// Options to override the commandline for testing purposes.
-var Options []commandline.Option //nolint:gochecknoglobals
-
-type App struct{}
-
-func (a App) Command() *cobra.Command {
-	fl := &flags{}
-	c := &cobra.Command{
-		Use:   "script library.sh",
-		Short: "Script is a tool for running Hack scripts",
-		Long: "Script will extract Hack scripts to a temporary directory, " +
-			"and provide a source file path to requested script",
-		Example: `
-# In Bash script
-source "$(go run knative.dev/hack/cmd/script@latest library.sh)"`,
-		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, argv []string) error {
-			op := createOperation(fl, argv)
-			return op.Extract(cmd)
-		},
+// Execute will execute the application.
+func Execute(opts []Option) Result {
+	ex := Execution{}.Default().Configure(opts)
+	fl, err := parseArgs(&ex)
+	if err != nil {
+		return Result{
+			Execution: ex,
+			Err:       err,
+		}
 	}
-	c.SetOut(os.Stdout)
-	return fl.withFlags(c)
+	op := createOperation(fl, ex.Args)
+	return Result{
+		Execution: ex,
+		Err:       op.Extract(ex),
+	}
+}
+
+// ExecuteOrDie will execute the application or perform os.Exit in case of error.
+func ExecuteOrDie(opts ...Option) {
+	if r := Execute(opts); r.Err != nil {
+		r.PrintErrln(fmt.Sprintf("%v", r.Err))
+		r.Exit(retcode.Calc(r.Err))
+	}
 }
 
 func createOperation(fl *flags, argv []string) extract.Operation {

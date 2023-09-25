@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"knative.dev/hack/pkg/inflator/extract"
+	"knative.dev/hack/pkg/utest/assert"
+	"knative.dev/hack/pkg/utest/require"
 )
 
 func TestExtract(t *testing.T) {

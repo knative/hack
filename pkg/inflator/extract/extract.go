@@ -43,6 +43,11 @@ type Operation struct {
 func (o Operation) Extract(prtr Printer) error {
 	l := logger{o.Verbose, prtr}
 	hackRootDir := os.Getenv(HackScriptsDirEnvVar)
+	if f, err := hack.Scripts.Open(o.ScriptName); err != nil {
+		return wrapErr(err, ErrUnexpected)
+	} else if err = f.Close(); err != nil {
+		return wrapErr(err, ErrUnexpected)
+	}
 	if hackRootDir == "" {
 		hackRootDir = path.Join(os.TempDir(), "knative", "hack", "scripts")
 	}
