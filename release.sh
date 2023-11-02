@@ -663,7 +663,9 @@ function set_latest_to_highest_semver() {
   # - knative-v1.0.0
   # - v1.0.0
   releases="$(hub_tool -p release | cut -d '-' -f2)"
-  [[ $? -eq 0 ]] || abort "cannot list releases"
+  if ! [[ $? -eq 0 ]]; then
+    abort "cannot list releases"
+  fi
   local last_version="$(echo "${releases}" | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$' | sort -r -V | head -1)"
   local release_id # don't combine with the line below, or $? will be 0
   [[ $? -eq 0 ]] || abort "cannot get relase id from github"
