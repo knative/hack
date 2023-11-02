@@ -668,8 +668,10 @@ function set_latest_to_highest_semver() {
   fi
   local last_version="$(echo "${releases}" | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$' | sort -r -V | head -1)"
   local release_id # don't combine with the line below, or $? will be 0
-  [[ $? -eq 0 ]] || abort "cannot get relase id from github"
   release_id="$(hub_tool api /repos/${ORG_NAME}/${REPO_NAME}/releases/tags/knative-${last_version} | jq .id)"
+  if [[ $? -ne 0 ]]; then
+    abort "cannot get relase id from github"
+  fi
   hub_tool api --method PATCH /repos/knative/serving/releases/$release_id -F make_latest=true > /dev/null || abort "error settomg $last_version to 'latest'"
   echo "Github release ${last_version} set as 'latest'"
 }
