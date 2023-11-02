@@ -655,6 +655,23 @@ function publish_artifacts() {
   banner "New release published successfully"
 }
 
+# Sets the github release with the highest semver to 'latest'
+function set_latest_to_highest_semver() {
+  # List latest release
+  local releases # don't combine with the line below, or $? will be 0
+  # Support tags in two formats
+  # - knative-v1.0.0
+  # - v1.0.0
+  releases="$(hub_tool -p release | cut -d '-' -f2)"
+  [[ $? -eq 0 ]] || abort "cannot list releases"
+  local last_version="$(echo "${releases}" | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$' | sort -r -V | head -1)"
+  local release_id # don't combine with the line below, or $? will be 0
+  [[ $? -eq 0 ]] || abort "cannot get relase id from github"
+  release_id="$(hub_tool api /repos/${ORG_NAME}/${REPO_NAME}/releases/tags/knative-${last_version} | jq .id)"
+  hub_tool api --method PATCH /repos/knative/serving/releases/$release_id -F make_latest=true > /dev/null || abort "error settomg $last_version to 'latest'"
+  echo "Github release ${last_version} set as 'latest'"
+}
+
 # Entry point for a release script.
 function main() {
   parse_flags "$@"
@@ -727,6 +744,7 @@ function main() {
   done
   echo "New release built successfully"
   publish_artifacts
+  set_latest_to_highest_semver
 }
 
 # Publishes a new release on GitHub, also git tagging it (unless this is not a versioned release).
