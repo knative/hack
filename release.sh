@@ -663,7 +663,7 @@ function set_latest_to_highest_semver() {
   fi
   echo "Setting latest release to highest semver"
   
-  local last_version release_id
+  local last_version release_id  # don't combine with assignment else $? will be 0
 
   last_version="$(hub_tool -p release | cut -d'-' -f2 | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$'| sort -r -V | head -1)"
   if ! [[ $? -eq 0 ]]; then
