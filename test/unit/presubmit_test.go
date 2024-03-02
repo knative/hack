@@ -38,7 +38,7 @@ func TestMainFunc(t *testing.T) {
 			contains("Unit tests for knative.dev/hack/schema"),
 			contains("Unit tests for knative.dev/hack"),
 			contains("Running go test with args: -short -race -count 1 ./..."),
-			contains("go run gotest.tools/gotestsum@v1.10.1 --format testname --junitfile"),
+			contains("go run gotest.tools/gotestsum@v1.11.0 --format testname --junitfile"),
 			contains("-- -short -race -count 1 ./..."),
 			contains("UNIT TESTS PASSED"),
 		},
