@@ -22,12 +22,11 @@ func TestUpdateDeps(t *testing.T) {
 			contains("Golang module: knative.dev/hack/test"),
 			contains("Golang module: knative.dev/hack/schema"),
 			contains("Golang module: knative.dev/hack"),
-			contains("Updating licenses"),
+			contains("Checking licenses"),
 			contains("Removing unwanted vendor files"),
 			contains("go mod tidy"),
 			contains("go mod vendor"),
-			contains("go run github.com/google/go-licenses@v1.6.0 save ./... " +
-				"--save_path=third_party/VENDOR-LICENSE --force"),
+			contains("go run github.com/google/go-licenses@v1.6.0 check"),
 		},
 	}, {
 		name: "go_update_deps --upgrade",
