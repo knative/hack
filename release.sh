@@ -23,7 +23,7 @@ source $(dirname "${BASH_SOURCE[0]}")/library.sh
 readonly ORG_NAME="${ORG_NAME:-knative}"
 
 # GitHub upstream.
-readonly REPO_UPSTREAM="https://github.com/${ORG_NAME}/${REPO_NAME}"
+REPO_UPSTREAM="https://github.com/${ORG_NAME}/${REPO_NAME}"
 
 # GCRs for Knative releases.
 readonly NIGHTLY_GCR="gcr.io/knative-nightly/github.com/${ORG_NAME}/${REPO_NAME}"
@@ -156,13 +156,15 @@ function setup_upstream() {
   if [[ -z "${upstream}" ]]; then
     echo "Setting remote upstream URL to '${REPO_UPSTREAM}'"
     git remote add upstream "${REPO_UPSTREAM}"
+  else
+    REPO_UPSTREAM="${upstream}"
   fi
 }
 
 # Fetch the release branch, so we can check it out.
 function setup_branch() {
   [[ -z "${RELEASE_BRANCH}" ]] && return
-  git fetch "${REPO_UPSTREAM}" "${RELEASE_BRANCH}:upstream/${RELEASE_BRANCH}"
+  git checkout --track "upstream/${RELEASE_BRANCH}" || abort "cannot checkout branch ${RELEASE_BRANCH}"
 }
 
 # Setup version, branch and release notes for a auto release.
@@ -211,6 +213,8 @@ function prepare_dot_release() {
   echo "Dot release requested"
   TAG_RELEASE=1
   PUBLISH_RELEASE=1
+  # Make sure the upstream is set
+  setup_upstream
   git fetch --all || abort "error fetching branches/tags from remote"
   # List latest release
   local releases # don't combine with the line below, or $? will be 0
@@ -676,7 +680,7 @@ function set_latest_to_highest_semver() {
   fi
   
   hub_tool api --method PATCH "/repos/${ORG_NAME}/${REPO_NAME}/releases/$release_id" \
-    -F make_latest=true > /dev/null || abort "error setting $last_version to 'latest'"
+    -F make_latest=true || abort "error setting $last_version to 'latest'"
   echo "Github release ${last_version} set as 'latest'"
 }
 
@@ -690,13 +694,6 @@ function main() {
   if [[ -n "${RELEASE_BRANCH}" && -z "${FROM_NIGHTLY_RELEASE}" && "${current_branch}" != "${RELEASE_BRANCH}" ]]; then
     setup_upstream
     setup_branch
-    # When it runs in Prow, the origin is identical with upstream, and previous
-    # fetch already fetched release-* branches, so no need to `checkout -b`
-    if (( IS_PROW )); then
-      git checkout "${RELEASE_BRANCH}" || abort "cannot checkout branch ${RELEASE_BRANCH}"
-    else
-      git checkout -b "${RELEASE_BRANCH}" upstream/"${RELEASE_BRANCH}" || abort "cannot checkout branch ${RELEASE_BRANCH}"
-    fi
     # HACK HACK HACK
     # Rerun the release script from the release branch. Fixes https://github.com/knative/test-infra/issues/1262
     ./hack/release.sh "$@"
