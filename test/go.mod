@@ -6,6 +6,8 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/thanhpk/randstr v1.0.4
 	golang.org/x/mod v0.12.0
+	k8s.io/apimachinery v0.29.2
+    k8s.io/code-generator v0.29.2
 )
 
 require (
