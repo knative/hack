@@ -186,16 +186,12 @@ function subheader() {
 
 # Simple log step for logging purposes.
 function log.step() {
-  gum_style \
-    --foreground 44 \
-    "=== $*"
+  echo "=== $*" | gum_style --foreground 44
 }
 
 # Simple log for logging purposes.
 function log() {
-  gum_style \
-    --foreground 45 \
-    "--- $*"
+  echo "--- $*" | gum_style --foreground 45
 }
 
 # Simple warning banner for logging purposes.
@@ -223,7 +219,7 @@ function group() {
   # End the group is there is already a group.
   if [ -z ${__GROUP_TRACKER+x} ]; then
     export __GROUP_TRACKER="grouping"
-    trap end_group EXIT
+    add_trap end_group EXIT
   else
     end_group
   fi
@@ -235,7 +231,7 @@ function group() {
 function start_group() {
   if [[ -n ${GITHUB_WORKFLOW:-} ]]; then
     echo "::group::$*"
-    trap end_group EXIT
+    add_trap end_group EXIT
   else
     log "$@"
   fi
@@ -729,7 +725,7 @@ function __remove_goworksum_if_empty() {
     go work sync
   fi
   if ! [ -s "$REPO_ROOT_DIR/go.work.sum" ]; then
-    log.step '=== Removing empty go.work.sum'
+    log.step 'Removing empty go.work.sum'
     rm -f "$REPO_ROOT_DIR/go.work.sum"
   fi
 }
@@ -788,7 +784,12 @@ function __go_update_deps_for_module() {
 
   if [[ "${FORCE_VENDOR:-false}" == "true" ]] || [ -d vendor ]; then
     group "Go mod vendor"
-    go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
+    # Call go work vendor for Go 1.22+ and go.work file exists.
+    if [ -f "$REPO_ROOT_DIR/go.work" ] && go help work vendor > /dev/null; then
+      go work vendor
+    else
+      go mod vendor
+    fi
   else
     go mod download -x
   fi
