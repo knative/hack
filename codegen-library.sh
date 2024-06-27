@@ -21,7 +21,7 @@ oldstate="$(set +o)"
 
 set -Eeuo pipefail
 
-export kn_hack_dir kn_hack_library \
+export repodir kn_hack_dir kn_hack_library \
   MODULE_NAME GOPATH GOBIN \
   CODEGEN_PKG KNATIVE_CODEGEN_PKG
 
@@ -36,13 +36,11 @@ else
   exit 42
 fi
 
-# Change dir to the original executing script's directory, not the current source!
-pushd "$(dirname "$(realpath "$0")")" > /dev/null
+repodir="$(go_run knative.dev/toolbox/modscope@latest current --path)"
 
 function go-resolve-pkg-dir() {
   local pkg="${1:?Pass the package name}"
-  local repodir pkgdir
-  repodir="$(go_run knative.dev/toolbox/modscope@latest current --path)"
+  local pkgdir
   if [ -d "${repodir}/vendor" ]; then
     pkgdir="${repodir}/vendor/${pkg}"
     if [ -d "${pkgdir}" ]; then
@@ -52,10 +50,14 @@ function go-resolve-pkg-dir() {
       return 1
     fi
   else
-    go list -f '{{.Dir}}' "${pkg}" 2>/dev/null
+    go mod download -x
+    go list -m -f '{{.Dir}}' "${pkg}" 2>/dev/null
     return $?
   fi
 }
+
+# Change dir to the original executing script's directory, not the current source!
+pushd "$(dirname "$(realpath "$0")")" > /dev/null
 
 if ! CODEGEN_PKG="${CODEGEN_PKG:-"$(go-resolve-pkg-dir k8s.io/code-generator)"}"; then
   warning "Failed to determine the k8s.io/code-generator package"
@@ -65,10 +67,8 @@ if ! KNATIVE_CODEGEN_PKG="${KNATIVE_CODEGEN_PKG:-"$(go-resolve-pkg-dir knative.d
 fi
 
 popd > /dev/null
-
-MODULE_NAME=$(go_mod_module_name)
 GOPATH=$(go_mod_gopath_hack)
-GOBIN="${TMPDIR}/${MODULE_NAME}/bin" # Set GOBIN explicitly as k8s-gen' are installed by go install.
+GOBIN="${GOPATH}/bin" # Set GOBIN explicitly as k8s-gen' are installed by go install.
 
 if [[ -n "${CODEGEN_PKG}" ]] && ! [ -x "${CODEGEN_PKG}/generate-groups.sh" ]; then
   chmod +x "${CODEGEN_PKG}/generate-groups.sh"
@@ -121,16 +121,20 @@ function generate-knative() {
 
 # Cleanup generated code if it differs only in the boilerplate year
 function cleanup-codegen() {
+  local difflist
   log "Cleaning up generated code"
+  difflist="$(mktemp)"
+  git diff --exit-code --name-only > "$difflist"
   # list git changes and skip those which differ only in the boilerplate year
   while read -r file; do
     # check if the file contains just the change in the boilerplate year
-    if [[ "$(LANG=C git diff --exit-code --shortstat -- "$file")" == ' 1 file changed, 1 insertions(+), 1 deletions(-)' ]] && \
-      [[ "$(git diff --exit-code -U1 -- "$file" | grep -Ec '^[+-]Copyright \d{4} The Knative Authors')" -eq 2 ]]; then
+    if [ "$(LANG=C git diff --exit-code --shortstat -- "$file")" = ' 1 file changed, 1 insertion(+), 1 deletion(-)' ] && \
+        [[ "$(git diff --exit-code -U1 -- "$file" | grep -Ec '^[+-]\s*[*#]?\s*Copyright 2[0-9]{3}')" -eq 2 ]]; then
       # restore changes to that file
       git checkout -- "$file"
     fi
-  done < <(git diff --exit-code --name-only)
+  done < "$difflist"
+  rm -f "$difflist"
 }
 
 add_trap cleanup-codegen EXIT

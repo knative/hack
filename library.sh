@@ -1053,6 +1053,7 @@ function latest_version() {
 
 # Initializations that depend on previous functions.
 # These MUST come last.
+MODULE_NAME="$(go_mod_module_name)"
 
 readonly _TEST_INFRA_SCRIPTS_DIR="$(dirname $(get_canonical_path "${BASH_SOURCE[0]}"))"
 readonly REPO_NAME_FORMATTED="Knative $(capitalize "${REPO_NAME//-/ }")"
