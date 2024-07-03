@@ -23,16 +23,16 @@ import (
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Example is a specification for a Example resource
+// Example is a specification for an Example resource
 type Example struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ExportSpec `json:"spec"`
+	Spec ExampleSpec `json:"spec"`
 }
 
-// ExportSpec is the spec for a Example resource
-type ExportSpec struct {
+// ExampleSpec is the spec for an Example resource
+type ExampleSpec struct {
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
