@@ -16,7 +16,5 @@
 
 set -Eeuo pipefail
 
-pushd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." > /dev/null
 # shellcheck disable=SC1090
-source "$(go run ./cmd/script codegen-library.sh)"
-popd > /dev/null
+source "$(go run "$(realpath "$(dirname "$0")/../../cmd/script")" codegen-library.sh)"
