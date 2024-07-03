@@ -785,7 +785,7 @@ function __go_update_deps_for_module() {
   if [[ "${FORCE_VENDOR:-false}" == "true" ]] || [ -d vendor ]; then
     group "Go mod vendor"
     # Call go work vendor for Go 1.22+ and go.work file exists.
-    if [ -f "$REPO_ROOT_DIR/go.work" ] && go help work vendor > /dev/null; then
+    if [ -f "$REPO_ROOT_DIR/go.work" ] && go help work vendor >/dev/null 2>&1; then
       go work vendor
     else
       go mod vendor
