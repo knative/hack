@@ -827,19 +827,19 @@ function go_mod_module_name() {
 # Intended to be used like:
 #   export GOPATH=$(go_mod_gopath_hack)
 function go_mod_gopath_hack() {
-    # Skip this if the directory is already checked out onto the GOPATH.
-  if [[ "${REPO_ROOT_DIR##$(go env GOPATH)}" != "$REPO_ROOT_DIR" ]]; then
+  # Skip this if the directory is already checked out onto the GOPATH.
+  if ! [ "${REPO_ROOT_DIR##"$(go env GOPATH)"}" = "$REPO_ROOT_DIR" ]; then
     go env GOPATH
     return
   fi
 
-  local TMP_DIR TMP_REPO_PATH
-  TMP_DIR="$TMPDIR/go"
-  TMP_REPO_PATH="${TMP_DIR}/src/$(go_mod_module_name)"
+  local TMP_GOPATH TMP_REPO_PATH
+  TMP_GOPATH="$TMPDIR/go"
+  TMP_REPO_PATH="${TMP_GOPATH}/src/$(go_mod_module_name)"
   mkdir -p "$(dirname "${TMP_REPO_PATH}")"
   ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
 
-  echo "${TMP_DIR}"
+  echo "${TMP_GOPATH}"
 }
 
 # Run kntest tool

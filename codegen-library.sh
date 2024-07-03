@@ -22,7 +22,7 @@ oldstate="$(set +o)"
 set -Eeuo pipefail
 
 export repodir kn_hack_dir kn_hack_library \
-  MODULE_NAME GOPATH GOBIN \
+  MODULE_NAME TMP_GOPATH GOPATH GOBIN \
   CODEGEN_PKG KNATIVE_CODEGEN_PKG
 
 kn_hack_dir="$(realpath "$(dirname "${BASH_SOURCE[0]:-$0}")")"
@@ -67,7 +67,8 @@ if ! KNATIVE_CODEGEN_PKG="${KNATIVE_CODEGEN_PKG:-"$(go-resolve-pkg-dir knative.d
 fi
 
 popd > /dev/null
-GOPATH=$(go_mod_gopath_hack)
+TMP_GOPATH=$(go_mod_gopath_hack)
+GOPATH="${TMP_GOPATH}"
 GOBIN="${GOPATH}/bin" # Set GOBIN explicitly as k8s-gen' are installed by go install.
 
 if [[ -n "${CODEGEN_PKG}" ]] && ! [ -x "${CODEGEN_PKG}/generate-groups.sh" ]; then
@@ -119,8 +120,14 @@ function generate-knative() {
     --go-header-file "$(boilerplate)"
 }
 
-# Cleanup generated code if it differs only in the boilerplate year
+# Cleanup after generating code
 function cleanup-codegen() {
+  restore-changes-if-its-copyright-year-only
+  restore-gopath
+}
+
+# Restore changes if the file contains only the change in the copyright year
+function restore-changes-if-its-copyright-year-only() {
   local difflist
   log "Cleaning up generated code"
   difflist="$(mktemp)"
@@ -135,6 +142,17 @@ function cleanup-codegen() {
     fi
   done < "$difflist"
   rm -f "$difflist"
+}
+
+# Restore the GOPATH and clean up the temporary directory
+function restore-gopath() {
+  if [ -n "$TMP_GOPATH" ] && [ -d "$TMP_GOPATH" ]; then
+    chmod -R u+w "${TMP_GOPATH}"
+    rm -rf "${TMP_GOPATH}"
+    unset TMP_GOPATH
+  fi
+  unset GOBIN
+  unset GOPATH
 }
 
 add_trap cleanup-codegen EXIT
