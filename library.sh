@@ -141,54 +141,41 @@ function calcRetcode() {
 # Print error message.
 # Parameters: $* - error message to be displayed
 function error() {
-  gum_style \
-      --foreground '#D00' \
+  local first="$1"
+  shift
+  local args=("ERROR: $first" "$@")
+  gum_banner \
+      --color '#D00' \
       --padding '1 3' \
       --border double \
-      --border-foreground '#D00' \
-      "ERROR: $*"
+      "${args[@]}" > /dev/stderr
 }
 
 # Print error message and call exit(n) where n calculated from the error message.
 # Parameters: $1..$n - error message to be displayed
 # Globals: abort_retcode will change the default retcode to be returned
 function abort() {
-  error "$*"
+  error "$@"
   readonly abort_retcode="${abort_retcode:-$(calcRetcode "$*")}"
   exit "$abort_retcode"
-}
-
-# Display a box banner.
-# Parameters: $1 - character to use for the box.
-#             $2 - banner message.
-# Deprecated: Use `gum_style` instead.
-function make_banner() {
-  local msg="$1$1$1$1 $2 $1$1$1$1"
-  local border="${msg//[^$1]/$1}"
-  echo -e "${border}\n${msg}\n${border}"
-  # TODO(adrcunha): Remove once logs have timestamps on Prow
-  # For details, see https://github.com/kubernetes/test-infra/issues/10100
-  if (( IS_PROW )); then
-    echo -e "$1$1$1$1 $(TZ='UTC' date --rfc-3339=ns)\n${border}"
-  fi
 }
 
 # Simple header for logging purposes.
 function header() {
   local upper
   upper="$(echo "$*" | tr '[:lower:]' '[:upper:]')"
-  gum_style \
-    --padding '1 3' \
+  gum_banner \
     --border double \
+    --color 44 \
+    --padding '1 3' \
     "$upper"
 }
 
 # Simple subheader for logging purposes.
 function subheader() {
-  gum_style \
-    --padding '1 3' \
-    --border rounded \
-    "$*"
+  gum_banner \
+      --color 45 \
+      "$@"
 }
 
 # Simple log step for logging purposes.
@@ -203,22 +190,87 @@ function log() {
 
 # Simple warning banner for logging purposes.
 function warning() {
-  gum_style \
-    --foreground '#DD0' \
+  local first="$1"
+  shift
+  local args=("WARN: $first" "$@")
+  gum_banner \
+    --color '#DD0' \
     --padding '1 3' \
     --border rounded \
-    --border-foreground '#DD0' \
-    "WARN: $*"
+    "${args[@]}" > /dev/stderr
+}
+
+# Display a box banner.
+# Parameters: $1 - character to use for the box.
+#             $2 - banner message.
+# Deprecated: Use `gum_banner` instead.
+function make_banner() {
+  local msg="$1$1$1$1 $2 $1$1$1$1"
+  local border="${msg//[^$1]/$1}"
+  echo -e "${border}\n${msg}\n${border}"
+  # TODO(adrcunha): Remove once logs have timestamps on Prow
+  # For details, see https://github.com/kubernetes/test-infra/issues/10100
+  if (( IS_PROW )); then
+    echo -e "$1$1$1$1 $(TZ='UTC' date --rfc-3339=ns)\n${border}"
+  fi
+}
+
+# Display a fancy box banner.
+# Parameters:
+#   [--border <type>] - a gum border type for the box, defaults to 'rounded'
+#   [--color <color>] - a gum color for the box, defaults to '0''
+#   [--padding <padding>] - a gum padding for the box, defaults to '0 1'
+#   $* - banner message.
+function gum_banner() {
+  local border='rounded'
+  local color='0'
+  local padding='0 1'
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --border)
+        border="$2"
+        shift 2
+        ;;
+      --color)
+        color="$2"
+        shift 2
+        ;;
+      --padding)
+        padding="$2"
+        shift 2
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+  local args=(
+    --align center
+    --border "$border"
+    --foreground "$color"
+    --border-foreground "$color"
+    --padding "$padding"
+    "$@"
+  )
+  # TODO: Remove once logs have timestamps on Prow, details see:
+  #       https://github.com/kubernetes/test-infra/issues/10100
+  if (( IS_PROW )); then
+    local dt
+    # RFC3339Nano format with 3 digits of ns without timezone offset
+    dt="$(TZ='UTC' date --rfc-3339=ns | sed -E 's/\.([0-9]{3})[0-9]+.+$/.\1/')"
+    args+=('' "at $dt")
+  fi
+  gum_style "${args[@]}"
 }
 
 # Simple info banner for logging purposes.
 function gum_style() {
-  go_run github.com/charmbracelet/gum@v0.14.1 style "$@" > /dev/stderr
+  go_run github.com/charmbracelet/gum@v0.14.1 style "$@"
 }
 
 # Checks whether the given function exists.
 function function_exists() {
-  [[ "$(type -t $1)" == "function" ]]
+  [[ "$(type -t "$1")" == "function" ]]
 }
 
 # GitHub Actions aware output grouping.
@@ -556,7 +608,7 @@ function report_go_test() {
   echo "Test log (ANSI) written to ${ansilog}"
 
   htmllog="${logfile/.jsonl/.html}"
-  go_run github.com/buildkite/terminal-to-html/v3/cmd/terminal-to-html@v3.11.0 \
+  go_run github.com/buildkite/terminal-to-html/v3/cmd/terminal-to-html@v3.10.0 \
     --preview < "$ansilog" > "$htmllog"
   echo "Test log (HTML) written to ${htmllog}"
 
@@ -829,13 +881,17 @@ function go_mod_module_name() {
   go_run knative.dev/toolbox/modscope@latest current
 }
 
+function __is_checkout_onto_gopath() {
+  ! [ "${REPO_ROOT_DIR##"$(go env GOPATH)"}" = "$REPO_ROOT_DIR" ]
+}
+
 # Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
 # for k8s client gen mixed with go mod.
 # Intended to be used like:
 #   export GOPATH=$(go_mod_gopath_hack)
 function go_mod_gopath_hack() {
   # Skip this if the directory is already checked out onto the GOPATH.
-  if ! [ "${REPO_ROOT_DIR##"$(go env GOPATH)"}" = "$REPO_ROOT_DIR" ]; then
+  if __is_checkout_onto_gopath; then
     go env GOPATH
     return
   fi
@@ -843,6 +899,10 @@ function go_mod_gopath_hack() {
   local TMP_GOPATH TMP_REPO_PATH
   TMP_GOPATH="$TMPDIR/go"
   TMP_REPO_PATH="${TMP_GOPATH}/src/$(go_mod_module_name)"
+  if [ -d "${TMP_REPO_PATH}" ]; then
+    echo "${TMP_GOPATH}"
+    return
+  fi
   mkdir -p "$(dirname "${TMP_REPO_PATH}")"
   ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
 

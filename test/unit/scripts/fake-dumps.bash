@@ -15,10 +15,10 @@
 # limitations under the License.
 
 function dump_metrics() {
-  header ">> Starting kube proxy"
-  header ">> Grabbing k8s metrics"
+  subheader "Starting kube proxy"
+  subheader "Grabbing k8s metrics"
 }
 
 function dump_cluster_state() {
-  header ">> Dumping the cluster state"
+  subheader "Dumping the cluster state"
 }

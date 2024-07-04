@@ -3,6 +3,7 @@ package unit_test
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,7 +13,11 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/abiosoft/lineprefix"
+	"github.com/charmbracelet/gum/style"
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thanhpk/randstr"
@@ -25,27 +30,124 @@ var (
 	toMuchNlRx   = regexp.MustCompile("(?m)\n{3,}")
 )
 
-func aborted(msg string) []check {
+func TestMain(m *testing.M) {
+	ensureGoModDownloaded()
+	os.Exit(m.Run())
+}
+
+// ensureGoModDownloaded will download the go modules before running the tests
+// to avoid the download and compilation messages, which may influence the
+// output assertions.
+func ensureGoModDownloaded() {
+	fmt.Println("Pre-fetching go modules, to avoid download messages during tests...")
+	cmd := exec.Command("go", "mod", "download", "-x")
+	cmd.Dir = path.Dir(currentDir())
+	cmd.Stdout = lineprefix.New(
+		lineprefix.Writer(os.Stdout),
+		lineprefix.Color(color.New(color.FgCyan)),
+		lineprefix.Prefix("STDOUT |"),
+	)
+	cmd.Stderr = lineprefix.New(
+		lineprefix.Writer(os.Stderr),
+		lineprefix.Color(color.New(color.FgRed)),
+		lineprefix.Prefix("STDERR |"),
+	)
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
+type headerOpts struct {
+	equals bool
+}
+
+func (o headerOpts) check(s string) check {
+	if o.equals {
+		return equal(s)[0]
+	}
+	return contains(s)
+}
+
+type headerOpt func(*headerOpts)
+
+func compileHeaderOpts(opts []headerOpt) headerOpts {
+	o := headerOpts{}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return o
+}
+
+func aborted(msg string, opts ...headerOpt) []check {
+	o := compileHeaderOpts(opts)
 	fmsg := fmt.Sprintf("ERROR: %s", msg)
-	return equal(makeBanner('*', fmsg))
+	styles := libglossDefaults(style.StylesNotHidden{
+		Border:           "double",
+		Align:            "center",
+		Padding:          "1 3",
+		Foreground:       "#D00",
+		BorderForeground: "#D00",
+	})
+	return []check{o.check(makeBanner(styles, fmsg))}
 }
 
-func warned(msg string) []check {
+func warned(msg string, opts ...headerOpt) []check {
+	o := compileHeaderOpts(opts)
 	fmsg := fmt.Sprintf("WARN: %s", msg)
-	return equal(makeBanner('!', fmsg))
+	styles := libglossDefaults(style.StylesNotHidden{
+		Border:           "rounded",
+		Align:            "center",
+		Padding:          "1 3",
+		Foreground:       "#DD0",
+		BorderForeground: "#DD0",
+	})
+
+	return []check{o.check(makeBanner(styles, fmsg))}
 }
 
-func makeBanner(ch rune, msg string) string {
-	const span = 4
-	border := strings.Repeat(string(ch), len(msg)+span*2+2)
-	side := strings.Repeat(string(ch), span)
-	return strings.Join([]string{
-		border,
-		side + " " + msg + " " + side,
-		border,
-		side + " 2018-07-18 23:00:00",
-		border,
-	}, "\n") + "\n"
+func header(msg string, opts ...headerOpt) check {
+	o := compileHeaderOpts(opts)
+	styles := libglossDefaults(style.StylesNotHidden{
+		Border:           "double",
+		Align:            "center",
+		Padding:          "1 3",
+		Foreground:       "45",
+		BorderForeground: "45",
+	})
+	return o.check(makeBanner(styles, msg))
+}
+
+func subheader(msg string, opts ...headerOpt) check {
+	o := compileHeaderOpts(opts)
+	styles := libglossDefaults(style.StylesNotHidden{
+		Border:           "rounded",
+		Align:            "center",
+		Padding:          "0 1",
+		Foreground:       "44",
+		BorderForeground: "44",
+	})
+	return o.check(makeBanner(styles, msg))
+}
+
+func libglossDefaults(styles style.StylesNotHidden) style.StylesNotHidden {
+	if styles.Align == "" {
+		styles.Align = "left"
+	}
+	if styles.Border == "" {
+		styles.Border = "none"
+	}
+	if styles.Margin == "" {
+		styles.Margin = "0 0"
+	}
+	if styles.Padding == "" {
+		styles.Padding = "0 0"
+	}
+	return styles
+}
+
+func makeBanner(styles style.StylesNotHidden, msg string) string {
+	return styles.ToLipgloss().Render(msg+"\n\nat 2018-07-18 23:00:00") + "\n"
 }
 
 func empty() []check {
@@ -57,18 +159,37 @@ func lines(strs ...string) []check {
 }
 
 func contains(str string) check {
-	return func(t assert.TestingT, output string) {
-		assert.Contains(t, output, str)
+	return func(t TestingT, output string, otype outputType) bool {
+		assert.Contains(t, output, str,
+			"The %s does not contain:\n%v",
+			otype, str)
+		return strings.Contains(output, str)
 	}
 }
 
 func equal(str string) []check {
-	return []check{func(t assert.TestingT, output string) {
-		assert.Equal(t, str, output)
+	return []check{func(t TestingT, output string, otype outputType) bool {
+		assert.Equal(t, str, output,
+			"The %s wasn't equal to:\n%v",
+			otype, str)
+		return str == output
 	}}
 }
 
-type check func(t assert.TestingT, output string)
+func dumpOutput(output string, otype outputType) string {
+	label := strings.ToUpper(string(otype))
+	return fmt.Sprintf("\n───── BEGIN %s ─────\n%v────── END %s ──────\n",
+		label, output, label)
+}
+
+type outputType string
+
+const (
+	outputTypeStdout outputType = "stdout"
+	outputTypeStderr outputType = "stderr"
+)
+
+type check func(t TestingT, output string, otype outputType) bool
 
 type testCase struct {
 	name     string
@@ -90,17 +211,26 @@ func (tc testCase) test(sc shellScript) func(t *testing.T) {
 		t.Parallel()
 		code, out, err, src := sc.run(t, tc.testCommands())
 		tc.validRetcode(t, code)
-		for _, chck := range coalesce(tc.stdout, equal("")) {
-			chck(t, out)
+		checkStream := func(output string, otype outputType, checks []check) {
+			success := true
+			for _, chck := range checks {
+				success = success && chck(t, output, otype)
+			}
+			if !success {
+				t.Logf("Printing %s because of failed check:%s", otype,
+					dumpOutput(output, otype))
+			}
 		}
-		for _, chck := range coalesce(tc.stderr, equal("")) {
-			chck(t, err)
-		}
+		checkStream(out, outputTypeStdout, coalesce(tc.stdout, empty()))
+		checkStream(err, outputTypeStderr, coalesce(tc.stderr, empty()))
+
 		if t.Failed() {
-			t.Logf("Retcode: %v", code)
-			t.Logf("Stdout: \n---\n%v---\n", out)
-			t.Logf("Stderr: \n---\n%v---\n", err)
-			t.Logf("Shell script source: \n---\n%v---\n", src)
+			failedScriptPath := path.Join(os.TempDir(),
+				t.Name(),
+				time.Now().Format("20060102-150405")+".bash")
+			require.NoError(t, os.MkdirAll(path.Dir(failedScriptPath), 0o755))
+			require.NoError(t, os.WriteFile(failedScriptPath, []byte(src), 0o755))
+			t.Logf("The script that failed: %s", failedScriptPath)
 		}
 	}
 }
@@ -122,14 +252,15 @@ func (tc testCase) testCommands() []string {
 }
 
 func (tc testCase) validRetcode(t TestingT, gotRetcode int) {
+	label := "Retcode mismatch"
 	if tc.retcode != nil {
-		assert.Equal(t, int(*tc.retcode), gotRetcode)
+		assert.Equal(t, int(*tc.retcode), gotRetcode, label)
 		return
 	}
 	if len(tc.stderr) > 0 {
-		assert.NotEqual(t, 0, gotRetcode)
+		assert.NotEqual(t, 0, gotRetcode, label)
 	} else {
-		assert.Equal(t, 0, gotRetcode)
+		assert.Equal(t, 0, gotRetcode, label)
 	}
 }
 
@@ -145,9 +276,9 @@ func (f fnScriptlet) scriptlet(t TestingT) string {
 
 func newShellScript(scriptlets ...scriptlet) shellScript {
 	return shellScript{
-		append(scriptlets, mockBinary("date", response{
+		append([]scriptlet{mockBinary("date", response{
 			anyArgs{}, simply("2018-07-18 23:00:00"),
-		})),
+		})}, scriptlets...),
 	}
 }
 
@@ -225,7 +356,9 @@ func mockBinary(name string, responses ...response) scriptlet {
 				"fi")
 		}
 		code = append(code,
-			fmt.Sprintf(`echo "%s $*"`, name),
+			// The ghost icon is used to differentiate the mocked command output
+			// from the real one.
+			fmt.Sprintf(`echo "👻 %s $*"`, name),
 			"EOF",
 			fmt.Sprintf(`chmod +x "${TMPPATH}/%s"`, name),
 		)
@@ -263,9 +396,11 @@ func (a anyArgs) String() string {
 func mockGo(responses ...response) scriptlet {
 	lstags := "knative.dev/toolbox/go-ls-tags@latest"
 	modscope := "knative.dev/toolbox/modscope@latest"
+	gum := "github.com/charmbracelet/gum@v0.14.1"
 	callOriginals := []args{
 		startsWith{"run " + lstags},
 		startsWith{"run " + modscope},
+		startsWith{"run " + gum},
 		startsWith{"run ./"},
 		startsWith{"list"},
 		startsWith{"env"},
@@ -280,6 +415,7 @@ func mockGo(responses ...response) scriptlet {
 		prefetchers: []prefetcher{
 			goRunHelpPrefetcher(lstags),
 			goRunHelpPrefetcher(modscope),
+			goRunHelpPrefetcher(gum),
 		},
 	}
 }
@@ -321,6 +457,9 @@ func union(scriptlets ...scriptlet) scriptlet {
 }
 
 type TestingT interface {
+	Cleanup(func())
+	Parallel()
+	Failed() bool
 	TempDir() string
 	Logf(format string, args ...interface{})
 	require.TestingT
@@ -341,7 +480,8 @@ func (s shellScript) run(t TestingT, commands []string) (int, string, string, st
 	c.Dir = rootDir
 	err := c.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		var exitError *exec.ExitError
+		if !errors.As(err, &exitError) {
 			require.NoError(t, err)
 		}
 	}

@@ -50,7 +50,7 @@ function go-resolve-pkg-dir() {
       return 1
     fi
   else
-    go mod download -x
+    go mod download -x > /dev/stderr
     go list -m -f '{{.Dir}}' "${pkg}" 2>/dev/null
     return $?
   fi
@@ -148,7 +148,8 @@ function restore-changes-if-its-copyright-year-only() {
 
 # Restore the GOPATH and clean up the temporary directory
 function restore-gopath() {
-  if (( IS_PROW )); then
+  # Skip this if the directory is already checked out onto the GOPATH.
+  if __is_checkout_onto_gopath; then
     return
   fi
   if [ -n "$CODEGEN_TMP_GOPATH" ] && [ -d "$CODEGEN_TMP_GOPATH" ]; then
