@@ -25,7 +25,8 @@ source "$(go run ./cmd/script library.sh)"
 ./test/hack/update-codegen.sh
 
 if ! git diff --exit-code; then
-  abort "codegen is out of date, please run test/hack/update-codegen.sh, and commit the changes."
+  abort "Codegen is out of date!" "" \
+    "Please, run test/hack/update-codegen.sh, and commit (or stage) the changes."
 fi
 
 header "Codegen is up to date"

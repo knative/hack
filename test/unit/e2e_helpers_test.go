@@ -16,18 +16,19 @@ func TestE2eHelpers(t *testing.T) {
 	)
 	tcs := []testCase{{
 		name:   `initialize --smoke-test-custom-flag`,
-		stdout: []check{contains("Custom flag detected")},
+		stdout: []check{subheader("Custom flag detected")},
 	}, {
 		name: `fail_test`,
 		commands: []string{
 			`initialize --run-tests`,
 			`fail_test`,
 		},
-		stderr:  aborted("test failed"),
 		retcode: retcode(111),
 		stdout: []check{
-			contains(">> DUMPING THE CLUSTER STATE"),
+			contains("Cluster is gke_deadbeef_1.24"),
+			subheader("Dumping the cluster state"),
 		},
+		stderr: aborted("test failed"),
 	}}
 	for _, tc := range tcs {
 		tc := tc
