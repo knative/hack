@@ -22,7 +22,7 @@ oldstate="$(set +o)"
 set -Eeuo pipefail
 
 export repodir kn_hack_dir kn_hack_library \
-  MODULE_NAME TMP_GOPATH GOPATH GOBIN \
+  MODULE_NAME CODEGEN_TMP_GOPATH CODEGEN_ORIGINAL_GOPATH GOPATH GOBIN \
   CODEGEN_PKG KNATIVE_CODEGEN_PKG
 
 kn_hack_dir="$(realpath "$(dirname "${BASH_SOURCE[0]:-$0}")")"
@@ -67,8 +67,10 @@ if ! KNATIVE_CODEGEN_PKG="${KNATIVE_CODEGEN_PKG:-"$(go-resolve-pkg-dir knative.d
 fi
 
 popd > /dev/null
-TMP_GOPATH=$(go_mod_gopath_hack)
-GOPATH="${TMP_GOPATH}"
+
+CODEGEN_ORIGINAL_GOPATH="$(go env GOPATH)"
+CODEGEN_TMP_GOPATH=$(go_mod_gopath_hack)
+GOPATH="${CODEGEN_TMP_GOPATH}"
 GOBIN="${GOPATH}/bin" # Set GOBIN explicitly as k8s-gen' are installed by go install.
 
 if [[ -n "${CODEGEN_PKG}" ]] && ! [ -x "${CODEGEN_PKG}/generate-groups.sh" ]; then
@@ -146,13 +148,15 @@ function restore-changes-if-its-copyright-year-only() {
 
 # Restore the GOPATH and clean up the temporary directory
 function restore-gopath() {
-  if [ -n "$TMP_GOPATH" ] && [ -d "$TMP_GOPATH" ]; then
-    chmod -R u+w "${TMP_GOPATH}"
-    rm -rf "${TMP_GOPATH}"
-    unset TMP_GOPATH
+  if (( IS_PROW )); then
+    return
   fi
-  unset GOBIN
-  unset GOPATH
+  if [ -n "$CODEGEN_TMP_GOPATH" ] && [ -d "$CODEGEN_TMP_GOPATH" ]; then
+    chmod -R u+w "${CODEGEN_TMP_GOPATH}"
+    rm -rf "${CODEGEN_TMP_GOPATH}"
+    unset CODEGEN_TMP_GOPATH
+  fi
+  unset CODEGEN_ORIGINAL_GOPATH GOPATH GOBIN
 }
 
 add_trap cleanup-codegen EXIT

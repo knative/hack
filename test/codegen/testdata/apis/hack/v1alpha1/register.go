@@ -20,8 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"knative.dev/hack/test/e2e/apis/hack"
+	"knative.dev/hack/test/codegen/testdata/apis/hack"
 )
 
 // SchemeGroupVersion is group version used to register these objects
