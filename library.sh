@@ -138,16 +138,22 @@ function calcRetcode() {
   echo "$rc"
 }
 
+# Print error message.
+# Parameters: $* - error message to be displayed
+function error() {
+  gum_style \
+      --foreground '#D00' \
+      --padding '1 3' \
+      --border double \
+      --border-foreground '#D00' \
+      "ERROR: $*"
+}
+
 # Print error message and call exit(n) where n calculated from the error message.
 # Parameters: $1..$n - error message to be displayed
 # Globals: abort_retcode will change the default retcode to be returned
 function abort() {
-  gum_style \
-    --foreground '#D00' \
-    --padding '1 3' \
-    --border double \
-    --border-foreground '#D00' \
-    "ERROR: $*"
+  error "$*"
   readonly abort_retcode="${abort_retcode:-$(calcRetcode "$*")}"
   exit "$abort_retcode"
 }
@@ -169,7 +175,8 @@ function make_banner() {
 
 # Simple header for logging purposes.
 function header() {
-  local upper="$(echo "$*" | tr a-z A-Z)"
+  local upper
+  upper="$(echo "$*" | tr '[:lower:]' '[:upper:]')"
   gum_style \
     --padding '1 3' \
     --border double \

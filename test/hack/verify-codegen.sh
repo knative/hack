@@ -16,13 +16,16 @@
 
 set -Eeuo pipefail
 
-rootdir="$(dirname "${BASH_SOURCE[0]:-$0}")/../.."
-relative_rootdir="$(realpath -s --relative-to="$PWD" "$rootdir")"
-# shellcheck disable=SC1090
-source "$(go run "${relative_rootdir}/cmd/script" codegen-library.sh)"
+rootdir="$(realpath "$(dirname "${BASH_SOURCE[0]:-$0}")/../..")"
+cd "${rootdir}"
 
-generate-groups deepcopy \
-  knative.dev/hack/test/codegen/testdata/apis/hack/v1alpha1 \
-  knative.dev/hack/test/codegen/testdata/apis \
-  hack:v1alpha1 \
-  "$@"
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script library.sh)"
+
+./test/hack/update-codegen.sh
+
+if ! git diff --exit-code; then
+  abort "codegen is out of date, please run test/hack/update-codegen.sh, and commit the changes."
+fi
+
+header "Codegen is up to date"
