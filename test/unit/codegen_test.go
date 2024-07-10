@@ -39,11 +39,7 @@ Deepcopy generation complete
 --- Cleaning up generated code
 `,
 		),
-		stderr: warned(
-			"Failed to determine the knative.dev/pkg package",
-			func(o *headerOpts) {
-				o.equals = true
-			}),
+		stderr: warned("Failed to determine the knative.dev/pkg package"),
 	}}
 	for i := range tcs {
 		tc := tcs[i]
@@ -63,7 +59,7 @@ func mockDeepcopyGen(t TestingT, opts ...deepcopyGenOpt) scriptlet {
 		opt(&d)
 	}
 	execPermission := os.FileMode(0o755)
-	var slet scriptlet = instructions()
+	slet := instructions()
 	gobin := path.Join(currentGopath(), "bin")
 	deepcopyGenPath := path.Join(gobin, "deepcopy-gen")
 	if !isCheckoutOntoGopath() {
