@@ -58,29 +58,7 @@ func ensureGoModDownloaded() {
 	}
 }
 
-type headerOpts struct {
-	equals bool
-}
-
-func (o headerOpts) check(s string) check {
-	if o.equals {
-		return equal(s)[0]
-	}
-	return contains(s)
-}
-
-type headerOpt func(*headerOpts)
-
-func compileHeaderOpts(opts []headerOpt) headerOpts {
-	o := headerOpts{}
-	for _, opt := range opts {
-		opt(&o)
-	}
-	return o
-}
-
-func aborted(msg string, opts ...headerOpt) []check {
-	o := compileHeaderOpts(opts)
+func aborted(msg string) []check {
 	fmsg := fmt.Sprintf("ERROR: %s", msg)
 	styles := libglossDefaults(style.StylesNotHidden{
 		Border:           "double",
@@ -89,11 +67,10 @@ func aborted(msg string, opts ...headerOpt) []check {
 		Foreground:       "#D00",
 		BorderForeground: "#D00",
 	})
-	return []check{o.check(makeBanner(styles, fmsg))}
+	return []check{contains(makeBanner(styles, fmsg))}
 }
 
-func warned(msg string, opts ...headerOpt) []check {
-	o := compileHeaderOpts(opts)
+func warned(msg string) []check {
 	fmsg := fmt.Sprintf("WARN: %s", msg)
 	styles := libglossDefaults(style.StylesNotHidden{
 		Border:           "rounded",
@@ -103,11 +80,10 @@ func warned(msg string, opts ...headerOpt) []check {
 		BorderForeground: "#DD0",
 	})
 
-	return []check{o.check(makeBanner(styles, fmsg))}
+	return []check{contains(makeBanner(styles, fmsg))}
 }
 
-func header(msg string, opts ...headerOpt) check {
-	o := compileHeaderOpts(opts)
+func header(msg string) check {
 	styles := libglossDefaults(style.StylesNotHidden{
 		Border:           "double",
 		Align:            "center",
@@ -115,11 +91,10 @@ func header(msg string, opts ...headerOpt) check {
 		Foreground:       "45",
 		BorderForeground: "45",
 	})
-	return o.check(makeBanner(styles, msg))
+	return contains(makeBanner(styles, msg))
 }
 
-func subheader(msg string, opts ...headerOpt) check {
-	o := compileHeaderOpts(opts)
+func subheader(msg string) check {
 	styles := libglossDefaults(style.StylesNotHidden{
 		Border:           "rounded",
 		Align:            "center",
@@ -127,7 +102,7 @@ func subheader(msg string, opts ...headerOpt) check {
 		Foreground:       "44",
 		BorderForeground: "44",
 	})
-	return o.check(makeBanner(styles, msg))
+	return contains(makeBanner(styles, msg))
 }
 
 func libglossDefaults(styles style.StylesNotHidden) style.StylesNotHidden {
