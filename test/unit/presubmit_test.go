@@ -24,9 +24,9 @@ func TestPresubmitTestMainFunc(t *testing.T) {
 			contains("Build tests for knative.dev/hack/schema"),
 			contains("Build tests for knative.dev/hack"),
 			contains("Checking that go code builds"),
-			contains("go test -vet=off -tags e2e,library -exec echo ./..."),
-			contains("go test -vet=off -tags  -exec echo ./..."),
-			contains("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
+			contains("👻 go test -vet=off -tags e2e,library -exec echo ./..."),
+			contains("👻 go test -vet=off -tags  -exec echo ./..."),
+			contains("👻 go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
 				" junit --suite=_build_tests --name=Check_Licenses --err-msg= --dest="),
 			header("BUILD TESTS PASSED"),
 		},
