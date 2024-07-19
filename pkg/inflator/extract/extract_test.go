@@ -26,6 +26,7 @@ func TestExtract(t *testing.T) {
 	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
 		`[hack] Extracting hack scripts to directory: /tmp/x
+[hack] boilerplate.go.txt
 [hack] codegen-library.sh
 [hack] e2e-tests.sh
 [hack] infra-library.sh
@@ -45,6 +46,7 @@ func TestExtract(t *testing.T) {
 	assert.Equal(t, prtr.out.String(), tmpdir+"/library.sh\n")
 	assert.Equal(t,
 		`[hack] Extracting hack scripts to directory: /tmp/x
+[hack] boilerplate.go.txt             up-to-date
 [hack] codegen-library.sh             up-to-date
 [hack] e2e-tests.sh                   up-to-date
 [hack] infra-library.sh               up-to-date
@@ -59,7 +61,7 @@ func TestExtract(t *testing.T) {
 
 func standarizeErrOut(errOut string, tmpdir string) string {
 	errOut = strings.ReplaceAll(errOut, tmpdir, "/tmp/x")
-	re := regexp.MustCompile(`\s+\d+ KiB \++`)
+	re := regexp.MustCompile(`\s+\d+ (?:Ki)?B \+*`)
 	errOut = re.ReplaceAllString(errOut, "")
 	return errOut
 }

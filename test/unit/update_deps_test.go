@@ -9,6 +9,10 @@ func TestUpdateDeps(t *testing.T) {
 	sc := newShellScript(
 		loadFile("source-library.bash"),
 		mockGo(),
+		mockBinary("truncate", response{
+			args:     startsWith{"--size 0"},
+			response: simply(""),
+		}),
 	)
 	tcs := []testCase{{
 		name:    "go_update_deps --unknown",
@@ -24,25 +28,26 @@ func TestUpdateDeps(t *testing.T) {
 			contains("Golang module: knative.dev/hack"),
 			contains("Checking licenses"),
 			contains("Removing unwanted vendor files"),
-			contains("go mod tidy"),
-			contains("go mod vendor"),
-			contains("go run github.com/google/go-licenses@v1.6.0 check"),
+			contains("👻 go mod tidy"),
+			contains("👻 go run github.com/google/go-licenses@v1.6.0 check"),
+			contains("👻 go mod download -x"),
 		},
 	}, {
 		name: "go_update_deps --upgrade",
 		stdout: []check{
-			contains("go run knative.dev/toolbox/buoy@latest float ./go.mod " +
-				"--release v9000.1 --domain knative.dev"),
+			contains("👻 go run knative.dev/toolbox/buoy@latest float " +
+				"./go.mod --release v9000.1 --domain knative.dev"),
 		},
 	}, {
 		name: "go_update_deps --upgrade --release 1.25 --module-release 0.28",
 		stdout: []check{
-			contains("go run knative.dev/toolbox/buoy@latest float ./go.mod " +
-				"--release 1.25 --domain knative.dev --module-release 0.28"),
+			contains("👻 go run knative.dev/toolbox/buoy@latest float " +
+				"./go.mod --release 1.25 --domain knative.dev " +
+				"--module-release 0.28"),
 		},
 	}}
-	for _, tc := range tcs {
-		tc := tc
+	for i := range tcs {
+		tc := tcs[i]
 		t.Run(tc.name, tc.test(sc))
 	}
 }
