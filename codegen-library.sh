@@ -144,8 +144,8 @@ function restore-changes-if-its-copyright-year-only() {
         git checkout -- "$file"
       fi
     done < "$difflist"
-    rm -f "$difflist"
   fi
+  rm -f "$difflist"
 }
 
 # Restore the GOPATH and clean up the temporary directory
