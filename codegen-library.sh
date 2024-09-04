@@ -146,7 +146,6 @@ function restore-changes-if-its-copyright-year-only() {
     done < "$difflist"
     rm -f "$difflist"
   fi
-  log "Cleanup done"
 }
 
 # Restore the GOPATH and clean up the temporary directory
