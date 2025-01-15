@@ -200,7 +200,7 @@ function prepare_dot_release() {
   # - knative-v1.0.0
   # - v1.0.0
   #releases="$(hub_tool release | cut -d '-' -f2)"
-  releases="$(gh release list --json tagName --jq '.[].tagName' | cut -d '-' -f2)"
+  releases="$(gh_tool release list --json tagName --jq '.[].tagName' | cut -d '-' -f2)"
   echo "Current releases are: ${releases}"
   [[ $? -eq 0 ]] || abort "cannot list releases"
   # If --release-branch passed, restrict to that release
@@ -226,7 +226,7 @@ function prepare_dot_release() {
   setup_branch
   # Use the original tag (ie. potentially with a knative- prefix) when determining the last version commit sha
   #local github_tag="$(hub_tool release | grep "${last_version}")"
-  local github_tag="$(gh release list --json tagName --jq '.[].tagName' | grep "${last_version}")"
+  local github_tag="$(gh_tool release list --json tagName --jq '.[].tagName' | grep "${last_version}")"
   local last_release_commit="$(git rev-list -n 1 "${github_tag}")"
   local last_release_commit_filtered="$(git rev-list --invert-grep --grep "\[skip-dot-release\]" -n 1 "${github_tag}")"
   local release_branch_commit="$(git rev-list -n 1 upstream/"${RELEASE_BRANCH}")"
