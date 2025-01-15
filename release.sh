@@ -97,6 +97,12 @@ function hub_tool() {
   go_run github.com/github/hub/v2@363513a "$@"
 }
 
+# Convenience function to run the GitHub CLI tool `gh`.
+# Parameters: $1..$n - arguments to gh.
+function gh_tool() {
+  go install github.com/cli/cli/v2/cmd/gh@v2.65.0
+}
+
 # Shortcut to "git push" that handles authentication.
 # Parameters: $1..$n - arguments to "git push <repo>".
 function git_push() {
@@ -193,7 +199,8 @@ function prepare_dot_release() {
   # Support tags in two formats
   # - knative-v1.0.0
   # - v1.0.0
-  releases="$(hub_tool release | cut -d '-' -f2)"
+  #releases="$(hub_tool release | cut -d '-' -f2)"
+  releases="$(gh release list --json tagName --jq '.[].tagName' | cut -d '-' -f2)"
   echo "Current releases are: ${releases}"
   [[ $? -eq 0 ]] || abort "cannot list releases"
   # If --release-branch passed, restrict to that release
@@ -218,7 +225,8 @@ function prepare_dot_release() {
   # Ensure there are new commits in the branch, otherwise we don't create a new release
   setup_branch
   # Use the original tag (ie. potentially with a knative- prefix) when determining the last version commit sha
-  local github_tag="$(hub_tool release | grep "${last_version}")"
+  #local github_tag="$(hub_tool release | grep "${last_version}")"
+  local github_tag="$(gh release list --json tagName --jq '.[].tagName' | grep "${last_version}")"
   local last_release_commit="$(git rev-list -n 1 "${github_tag}")"
   local last_release_commit_filtered="$(git rev-list --invert-grep --grep "\[skip-dot-release\]" -n 1 "${github_tag}")"
   local release_branch_commit="$(git rev-list -n 1 upstream/"${RELEASE_BRANCH}")"
@@ -239,7 +247,8 @@ function prepare_dot_release() {
   # If --release-notes not used, copy from the latest release
   if [[ -z "${RELEASE_NOTES}" ]]; then
     RELEASE_NOTES="$(mktemp)"
-    hub_tool release show -f "%b" "${github_tag}" > "${RELEASE_NOTES}"
+    #hub_tool release show -f "%b" "${github_tag}" > "${RELEASE_NOTES}"
+    gh_tool release view "${github_tag}" --json "body" --jq '.body' > "${RELEASE_NOTES}"
     echo "Release notes from ${last_version} copied to ${RELEASE_NOTES}"
   fi
 }
@@ -640,18 +649,21 @@ function set_latest_to_highest_semver() {
   
   local last_version release_id  # don't combine with assignment else $? will be 0
 
-  last_version="$(hub_tool -p release | cut -d'-' -f2 | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$'| sort -r -V | head -1)"
+  #last_version="$(hub_tool -p release | cut -d'-' -f2 | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$'| sort -r -V | head -1)"
+  last_version="$(gh_tool release list --json tagName --jq '.[].tagName' | cut -d'-' -f2 | grep '^v[0-9]\+\.[0-9]\+\.[0-9]\+$'| sort -r -V | head -1)"
   if ! [[ $? -eq 0 ]]; then
     abort "cannot list releases"
   fi
   
-  release_id="$(hub_tool api "/repos/${ORG_NAME}/${REPO_NAME}/releases/tags/knative-${last_version}" | jq .id)"
-  if [[ $? -ne 0 ]]; then
-    abort "cannot get relase id from github"
-  fi
+#  release_id="$( api "/repos/${ORG_NAME}/${REPO_NAME}/releases/tags/knative-${last_version}" | jq .id)"
+#  if [[ $? -ne 0 ]]; then
+#    abort "cannot get relase id from github"
+#  fi
   
-  hub_tool api --method PATCH "/repos/${ORG_NAME}/${REPO_NAME}/releases/$release_id" \
-    -F make_latest=true > /dev/null || abort "error setting $last_version to 'latest'"
+#  hub_tool api --method PATCH "/repos/${ORG_NAME}/${REPO_NAME}/releases/$release_id" \
+#    -F make_latest=true > /dev/null || abort "error setting $last_version to 'latest'"
+#
+  gh_tool release edit "knative-${last_version}" --latest > /dev/null || abort "error setting $last_version to 'latest'"
   echo "Github release ${last_version} set as 'latest'"
 }
 
@@ -742,12 +754,14 @@ function publish_to_github() {
   local description="$(mktemp)"
   local attachments_dir="$(mktemp -d)"
   local commitish=""
+  local target_branch=""
   local github_tag="knative-${TAG}"
 
   # Copy files to a separate dir
+  # shellcheck disable=SC2068
   for artifact in $@; do
     cp ${artifact} "${attachments_dir}"/
-    attachments+=("--attach=${artifact}#$(basename ${artifact})")
+    attachments+=("${artifact}#$(basename ${artifact})")
   done
   echo -e "${title}\n" > "${description}"
   if [[ -n "${RELEASE_NOTES}" ]]; then
@@ -774,13 +788,23 @@ function publish_to_github() {
   git tag -a "${github_tag}" -m "${title}"
   git_push tag "${github_tag}"
 
-  [[ -n "${RELEASE_BRANCH}" ]] && commitish="--commitish=${RELEASE_BRANCH}"
+#  [[ -n "${RELEASE_BRANCH}" ]] && commitish="--commitish=${RELEASE_BRANCH}"
+  [[ -n "${RELEASE_BRANCH}" ]] && target_branch="--target=${RELEASE_BRANCH}"
   for i in {2..0}; do
-    hub_tool release create \
-        ${attachments[@]} \
-        --file="${description}" \
-        "${commitish}" \
-        "${github_tag}" && return 0
+#    hub_tool release create \
+#        ${attachments[@]} \
+#        --file="${description}" \
+#        "${commitish}" \
+#        "${github_tag}" && return 0
+
+    # shellcheck disable=SC2068
+    gh_tool release create \
+      "${github_tag}" \
+      --title "${title}" \
+      --notes-file "${description}" \
+      "${target_branch}" \
+      ${attachments[@]} && return 0
+
     if [[ "${i}" -gt 0 ]]; then
       echo "Error publishing the release, retrying in 15s..."
       sleep 15
