@@ -23,6 +23,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 )
@@ -95,22 +96,26 @@ func makeParserMapForPackage(pkg string) (map[string]*ast.Package, error) {
 		if _, ok := parserMapCache[current]; ok {
 			continue
 		}
-		if !strings.HasPrefix(current, root) &&
-			!strings.HasPrefix(current, ".") &&
-			!strings.HasPrefix(current, "vendor/") { // TODO: this will not work with go mod cache as written.
-			current = "vendor/" + current
+		pkgDir := current
+		if !strings.HasPrefix(pkgDir, root) && !strings.HasPrefix(pkgDir, ".") {
+			vendoredPkg := path.Join("vendor", pkgDir)
+			if !strings.HasPrefix(pkgDir, "vendor") && dirExists(vendoredPkg) {
+				// vendor mode
+				pkgDir = vendoredPkg
+			} else {
+				pkgDir = path.Join(gomodcache(), pkgDir)
+			}
 		}
-		spm, err := parser.ParseDir(fs, current, ignoreDirectories, parser.ParseComments)
+		spm, err := parser.ParseDir(fs, pkgDir, ignoreDirectories, parser.ParseComments)
 		if err != nil {
-			return parserMapCache, fmt.Errorf("error parse dir %q: %w", current, err)
+			return parserMapCache, fmt.Errorf("error parse dir %q: %w", pkgDir, err)
 		}
 		for _, v := range spm {
-			localName := current
-			if strings.HasPrefix(localName, "./") {
-				localName = localName[2:]
+			name := current
+			if strings.HasPrefix(name, "./") {
+				name = name[2:]
+				name = fmt.Sprintf("%s/%s", root, name)
 			}
-			name := fmt.Sprintf("%s/%s", root, localName)
-			name = strings.Replace(name, root+"/vendor/", "", 1)
 			parserMapCache[name] = v
 		}
 		fd, err := os.Open(current)
@@ -132,6 +137,14 @@ func makeParserMapForPackage(pkg string) (map[string]*ast.Package, error) {
 		}
 	}
 	return parserMapCache, nil
+}
+
+func dirExists(dir string) bool {
+	fi, err := os.Stat(dir)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+	return fi.IsDir()
 }
 
 // parseFieldDocs parses the comments of a specific field. It attempts to figure out whether the

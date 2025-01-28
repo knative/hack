@@ -19,6 +19,7 @@ package example
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 type LoremIpsum struct {
@@ -99,6 +100,8 @@ type LoremSpec struct {
 }
 
 type LoremIpsumStatus struct {
+	duckv1.Status `json:",inline"`
+
 	// Luctus leo vitae ipsum fermentum, vitae pellentesque sapien finibus.
 	Luctus int `json:"luctus"`
 
