@@ -1,3 +1,4 @@
+// Deprecated: use k8s controller-gen instead, see: https://github.com/knative-extensions/sample-controller/pull/931
 module knative.dev/hack/schema
 
 go 1.21

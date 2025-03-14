@@ -1,5 +1,9 @@
 # Schema Tool
 
+> [!WARNING]  
+> This module is now deprecated. Please, use [k8s controller-gen](sigs.k8s.io/controller-tools/cmd/controller-gen) 
+> instead. See, example: https://github.com/knative-extensions/sample-controller/pull/931
+
 Schema is a seed of a CLI tool that a downstream can use to use reflection and go file inspection to 
 generate a base version of OpenAPI for a CRD. The resulting schema will be used by Kubernetes to
 provide results from `kubectl explain <type>` calls, and type validation.
