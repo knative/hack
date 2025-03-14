@@ -1,6 +1,6 @@
 module knative.dev/hack/test
 
-go 1.21
+go 1.22.0
 
 require (
 	github.com/abiosoft/lineprefix v0.1.4
