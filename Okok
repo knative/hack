@@ -1,0 +1,15 @@
+local RS = game:GetService("ReplicatedStorage")
+local activateSkill = RS:WaitForChild("RemoteEvents"):WaitForChild("ActivateSkill")
+local UIS = game:GetService("UserInputService")
+local tool = script.Parent
+
+tool.Activated:Connect(function()
+    activateSkill:FireServer("MidShot")
+end)
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.E then
+        activateSkill:FireServer("BodyBlock")
+    end
+end)
