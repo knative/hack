@@ -6,12 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -308,13 +311,43 @@ func (s simply) Invocations(_ string) []string {
 type callOriginal struct{}
 
 func (o callOriginal) Invocations(bin string) []string {
-	binPath, err := exec.LookPath(bin)
+	binPath, err := findExecutable(bin)
 	if err != nil {
 		panic(err)
 	}
 	return []string{
 		fmt.Sprintf(`  '%s' "$@"`, binPath),
 	}
+}
+
+func findExecutable(bin string) (string, error) {
+	goroot := runtime.GOROOT()
+	binPath := filepath.Join(goroot, "bin", bin)
+	if runtime.GOOS == "windows" {
+		binPath = binPath + ".exe"
+	}
+	if err := checkExecutable(binPath); err != nil {
+		binPath, err = exec.LookPath(bin)
+		if err != nil {
+			return "", err
+		}
+	}
+	return binPath, nil
+}
+
+func checkExecutable(file string) error {
+	d, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
+	m := d.Mode()
+	if m.IsDir() {
+		return syscall.EISDIR
+	}
+	if m&0111 != 0 {
+		return nil
+	}
+	return fs.ErrPermission
 }
 
 func mockBinary(name string, responses ...response) scriptlet {
@@ -369,8 +402,8 @@ func (a anyArgs) String() string {
 }
 
 func mockGo(responses ...response) scriptlet {
-	lstags := "knative.dev/toolbox/go-ls-tags@latest"
-	modscope := "knative.dev/toolbox/modscope@latest"
+	lstags := "knative.dev/toolbox/go-ls-tags@bc7e152"
+	modscope := "knative.dev/toolbox/modscope@bc7e152"
 	gum := "github.com/charmbracelet/gum@v0.14.1"
 	callOriginals := []args{
 		startsWith{"run " + lstags},
@@ -464,12 +497,13 @@ func (s shellScript) run(t TestingT, commands []string) (int, string, string, st
 }
 
 func (s shellScript) source(t TestingT, commands []string) string {
+	goroot := runtime.GOROOT()
 	source := fmt.Sprintf(`
 set -Eeuo pipefail
 export TMPPATH='%s'
-export PATH="${TMPPATH}:${PATH}"
+export PATH="${TMPPATH}:%s:${PATH}"
 export KNATIVE_HACK_SCRIPT_MANUAL_VERBOSE=true
-`, t.TempDir())
+`, t.TempDir(), fmt.Sprintf("%s/bin", goroot))
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
 		source += "\n" + strings.TrimPrefix(sclet.scriptlet(t), bashShebang) + "\n"
@@ -512,24 +546,21 @@ func (f fnPrefetcher) prefetch(t TestingT) {
 // and compilation messages, which go prints will not influence the test.
 func goRunHelpPrefetcher(tool string) prefetcher {
 	return fnPrefetcher(func(t TestingT) {
-		c := exec.Command("go", "run", tool, "--help")
-		var (
-			stdout, stderr io.ReadCloser
-			err            error
-		)
-		stdout, err = c.StdoutPipe()
+		stdout := bytes.NewBuffer(make([]byte, 0, 1024))
+		stderr := bytes.NewBuffer(make([]byte, 0, 1024))
+		gobin, err := findExecutable("go")
 		require.NoError(t, err)
-		stderr, err = c.StderrPipe()
-		require.NoError(t, err)
+		c := exec.Command(gobin, "run", tool, "--help")
+		c.Stdout = stdout
+		c.Stderr = stderr
 		err = c.Run()
 		if err != nil {
-			stdBytes, merr := io.ReadAll(stdout)
-			require.NoError(t, merr)
-			errBytes, rerr := io.ReadAll(stderr)
-			require.NoError(t, rerr)
+			errBytes, _ := io.ReadAll(stderr)
+			stdBytes, _ := io.ReadAll(stdout)
 			require.NoError(t, err,
-				"------\nSTDOUT\n------", string(stdBytes),
-				"------\nSTDERR\n------", string(errBytes))
+				"───── BEGIN STDOUT ─────\n%s\n────── END STDOUT ──────\n"+
+					"───── BEGIN STDERR ─────\n%s\n────── END STDERR ──────",
+				string(stdBytes), string(errBytes))
 		}
 	})
 }

@@ -677,6 +677,24 @@ function start_knative_eventing_extension() {
   wait_until_pods_running "$2" || return 1
 }
 
+# Resolve the version of a dependency from the go.mod file at the project root.
+# Parameters: $1 - name of the dependency (required)
+#             $2 - fallback version if not found (optional)
+function resolve_dep_version() {
+  local dep="$1"
+  local fallback="${2:-}"
+  local version
+  version=$(go list -m -f '{{if eq .Path "'"$dep"'"}}{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}{{end}}' "$dep" 2>/dev/null)
+  if [[ -z "$version" ]]; then
+    if [[ -z "$fallback" ]]; then
+      abort "Dependency $dep not found in go.mod and no fallback version provided."
+    fi
+    echo "$fallback"
+  else
+    echo -n "$version"
+  fi
+}
+
 # Run a go utility without installing it.
 # Parameters: $1 - tool package for go run.
 #             $2..$n - parameters passed to the tool.
@@ -748,7 +766,7 @@ function foreach_go_module() {
       echo "Command '${cmd}' failed in module $gomod_dir: $failed" >&2
       return $failed
     fi
-  done < <(go_run knative.dev/toolbox/modscope@latest ls -p)
+  done < <(go_run knative.dev/toolbox/modscope@bc7e152 ls -p)
 }
 
 # Update go deps.
@@ -823,7 +841,7 @@ function __go_update_deps_for_module() {
     else
       group "Upgrading to release ${RELEASE}"
     fi
-    FLOATING_DEPS+=( $(go_run knative.dev/toolbox/buoy@latest float ./go.mod "${buoyArgs[@]}") )
+    FLOATING_DEPS+=( $(go_run knative.dev/toolbox/buoy@bc7e152 float ./go.mod "${buoyArgs[@]}") )
     if [[ ${#FLOATING_DEPS[@]} > 0 ]]; then
       echo "Floating deps to ${FLOATING_DEPS[@]}"
       go get -d ${FLOATING_DEPS[@]}
@@ -878,7 +896,7 @@ function __go_update_deps_for_module() {
 # Intended to be used like:
 #   export MODULE_NAME=$(go_mod_module_name)
 function go_mod_module_name() {
-  go_run knative.dev/toolbox/modscope@latest current
+  go_run knative.dev/toolbox/modscope@bc7e152 current
 }
 
 function __is_checkout_onto_gopath() {
