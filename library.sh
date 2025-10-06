@@ -697,7 +697,7 @@ function go_run() {
   fi
   export GORUN_PATH
   gotoolchain="$(go env GOTOOLCHAIN)"
-  if [[ "$package" != knative.dev/toolbox/cmd/testgrid@* ]]; then
+  if [[ "$package" == knative.dev/toolbox/* ]]; then
     gotoolchain=auto
   fi
   GOTOOLCHAIN="${gotoolchain}" \
