@@ -44,8 +44,8 @@ func TestBuildFromSource(t *testing.T) {
 		},
 		stdout: append(outChecks, contains(checksumsContent)),
 	}}
-	for i := range tcs {
-		tc := tcs[i]
+	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tmp := t.TempDir()
 			sc := testReleaseShellScript(
