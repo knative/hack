@@ -46,8 +46,8 @@ func TestUpdateDeps(t *testing.T) {
 				"--module-release 0.28"),
 		},
 	}}
-	for i := range tcs {
-		tc := tcs[i]
+	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.name, tc.test(sc))
 	}
 }
