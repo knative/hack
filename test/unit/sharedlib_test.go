@@ -5,7 +5,6 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -205,7 +204,7 @@ func (tc testCase) test(sc shellScript) func(t *testing.T) {
 			"go: knative\\.dev/toolbox@v0\\.0\\.0-\\d+-[0-9a-f]+ requires "+
 				"go >= \\d\\.\\d+\\.\\d+; switching to go\\d\\.\\d+\\.\\d+\n",
 		).ReplaceAllString(errOut, "")
-		checkStream(errOut, outputTypeStdout, coalesce(tc.stderr, empty()))
+		checkStream(errOut, outputTypeStderr, coalesce(tc.stderr, empty()))
 
 		if t.Failed() {
 			failedScriptPath := path.Join(os.TempDir(),
@@ -561,8 +560,8 @@ func goRunHelpPrefetcher(tool string) prefetcher {
 		c.Stderr = stderr
 		err = c.Run()
 		if err != nil {
-			errBytes, _ := io.ReadAll(stderr)
-			stdBytes, _ := io.ReadAll(stdout)
+			errBytes := stderr.Bytes()
+			stdBytes := stdout.Bytes()
 			require.NoError(t, err,
 				"───── BEGIN STDOUT ─────\n%s\n────── END STDOUT ──────\n"+
 					"───── BEGIN STDERR ─────\n%s\n────── END STDERR ──────",
