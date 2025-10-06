@@ -36,7 +36,7 @@ else
   exit 42
 fi
 
-repodir="$(go_run knative.dev/toolbox/modscope@bc7e152 current --path)"
+repodir="$(go_run knative.dev/toolbox/modscope@latest current --path)"
 
 function go-resolve-pkg-dir() {
   local pkg="${1:?Pass the package name}"

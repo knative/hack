@@ -187,7 +187,7 @@ func retcode(code int) *returnCode {
 func (tc testCase) test(sc shellScript) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		code, out, err, src := sc.run(t, tc.testCommands())
+		code, out, errOut, src := sc.run(t, tc.testCommands())
 		tc.validRetcode(t, code)
 		checkStream := func(output string, otype outputType, checks []check) {
 			success := true
@@ -200,7 +200,12 @@ func (tc testCase) test(sc shellScript) func(t *testing.T) {
 			}
 		}
 		checkStream(out, outputTypeStdout, coalesce(tc.stdout, empty()))
-		checkStream(err, outputTypeStderr, coalesce(tc.stderr, empty()))
+		// skip go switching messages from asserting
+		errOut = regexp.MustCompile(
+			"go: knative\\.dev/toolbox@v0\\.0\\.0-\\d+-[0-9a-f]+ requires "+
+				"go >= \\d\\.\\d+\\.\\d+; switching to go\\d\\.\\d+\\.\\d+\n",
+		).ReplaceAllString(errOut, "")
+		checkStream(errOut, outputTypeStdout, coalesce(tc.stderr, empty()))
 
 		if t.Failed() {
 			failedScriptPath := path.Join(os.TempDir(),
@@ -402,8 +407,8 @@ func (a anyArgs) String() string {
 }
 
 func mockGo(responses ...response) scriptlet {
-	lstags := "knative.dev/toolbox/go-ls-tags@bc7e152"
-	modscope := "knative.dev/toolbox/modscope@bc7e152"
+	lstags := "knative.dev/toolbox/go-ls-tags@latest"
+	modscope := "knative.dev/toolbox/modscope@latest"
 	gum := "github.com/charmbracelet/gum@v0.14.1"
 	callOriginals := []args{
 		startsWith{"run " + lstags},
@@ -551,6 +556,7 @@ func goRunHelpPrefetcher(tool string) prefetcher {
 		gobin, err := findExecutable("go")
 		require.NoError(t, err)
 		c := exec.Command(gobin, "run", tool, "--help")
+		c.Env = append(os.Environ(), "GOTOOLCHAIN=auto")
 		c.Stdout = stdout
 		c.Stderr = stderr
 		err = c.Run()

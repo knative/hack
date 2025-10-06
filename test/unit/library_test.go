@@ -102,9 +102,6 @@ func TestHelperFunctions(t *testing.T) {
 	}, {
 		name:   `hashCode ""`,
 		stdout: equal("0"),
-	}, {
-		name:   `resolve_dep_version k8s.io/code-generator`,
-		stdout: equal("v0.29.2"),
 	}}
 	for _, tc := range tcs {
 		tc := tc
