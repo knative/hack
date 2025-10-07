@@ -183,6 +183,11 @@ func retcode(code int) *returnCode {
 	return &rc
 }
 
+var errOutStripGoSwitchingRe = regexp.MustCompile(
+	"go: knative\\.dev/toolbox@v0\\.0\\.0-\\d+-[0-9a-f]+ requires " +
+		"go >= \\d\\.\\d+\\.\\d+; switching to go\\d\\.\\d+\\.\\d+\n",
+)
+
 func (tc testCase) test(sc shellScript) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
@@ -200,10 +205,7 @@ func (tc testCase) test(sc shellScript) func(t *testing.T) {
 		}
 		checkStream(out, outputTypeStdout, coalesce(tc.stdout, empty()))
 		// skip go switching messages from asserting
-		errOut = regexp.MustCompile(
-			"go: knative\\.dev/toolbox@v0\\.0\\.0-\\d+-[0-9a-f]+ requires "+
-				"go >= \\d\\.\\d+\\.\\d+; switching to go\\d\\.\\d+\\.\\d+\n",
-		).ReplaceAllString(errOut, "")
+		errOut = errOutStripGoSwitchingRe.ReplaceAllString(errOut, "")
 		checkStream(errOut, outputTypeStderr, coalesce(tc.stderr, empty()))
 
 		if t.Failed() {
