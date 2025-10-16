@@ -41,8 +41,8 @@ Deepcopy generation complete
 		),
 		stderr: warned("Failed to determine the knative.dev/pkg package"),
 	}}
-	for i := range tcs {
-		tc := tcs[i]
+	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.name, tc.test(sc))
 	}
 }

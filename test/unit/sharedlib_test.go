@@ -5,13 +5,15 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -181,10 +183,15 @@ func retcode(code int) *returnCode {
 	return &rc
 }
 
+var errOutStripGoSwitchingRe = regexp.MustCompile(
+	"go: knative\\.dev/toolbox@v0\\.0\\.0-\\d+-[0-9a-f]+ requires " +
+		"go >= \\d\\.\\d+\\.\\d+; switching to go\\d\\.\\d+\\.\\d+\n",
+)
+
 func (tc testCase) test(sc shellScript) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		code, out, err, src := sc.run(t, tc.testCommands())
+		code, out, errOut, src := sc.run(t, tc.testCommands())
 		tc.validRetcode(t, code)
 		checkStream := func(output string, otype outputType, checks []check) {
 			success := true
@@ -197,7 +204,9 @@ func (tc testCase) test(sc shellScript) func(t *testing.T) {
 			}
 		}
 		checkStream(out, outputTypeStdout, coalesce(tc.stdout, empty()))
-		checkStream(err, outputTypeStderr, coalesce(tc.stderr, empty()))
+		// skip go switching messages from asserting
+		errOut = errOutStripGoSwitchingRe.ReplaceAllString(errOut, "")
+		checkStream(errOut, outputTypeStderr, coalesce(tc.stderr, empty()))
 
 		if t.Failed() {
 			failedScriptPath := path.Join(os.TempDir(),
@@ -308,13 +317,43 @@ func (s simply) Invocations(_ string) []string {
 type callOriginal struct{}
 
 func (o callOriginal) Invocations(bin string) []string {
-	binPath, err := exec.LookPath(bin)
+	binPath, err := findExecutable(bin)
 	if err != nil {
 		panic(err)
 	}
 	return []string{
 		fmt.Sprintf(`  '%s' "$@"`, binPath),
 	}
+}
+
+func findExecutable(bin string) (string, error) {
+	goroot := runtime.GOROOT()
+	binPath := filepath.Join(goroot, "bin", bin)
+	if runtime.GOOS == "windows" {
+		binPath = binPath + ".exe"
+	}
+	if err := checkExecutable(binPath); err != nil {
+		binPath, err = exec.LookPath(bin)
+		if err != nil {
+			return "", err
+		}
+	}
+	return binPath, nil
+}
+
+func checkExecutable(file string) error {
+	d, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
+	m := d.Mode()
+	if m.IsDir() {
+		return syscall.EISDIR
+	}
+	if m&0111 != 0 {
+		return nil
+	}
+	return fs.ErrPermission
 }
 
 func mockBinary(name string, responses ...response) scriptlet {
@@ -464,12 +503,13 @@ func (s shellScript) run(t TestingT, commands []string) (int, string, string, st
 }
 
 func (s shellScript) source(t TestingT, commands []string) string {
+	goroot := runtime.GOROOT()
 	source := fmt.Sprintf(`
 set -Eeuo pipefail
 export TMPPATH='%s'
-export PATH="${TMPPATH}:${PATH}"
+export PATH="${TMPPATH}:%s:${PATH}"
 export KNATIVE_HACK_SCRIPT_MANUAL_VERBOSE=true
-`, t.TempDir())
+`, t.TempDir(), fmt.Sprintf("%s/bin", goroot))
 	bashShebang := "#!/usr/bin/env bash\n"
 	for _, sclet := range s.scriptlets {
 		source += "\n" + strings.TrimPrefix(sclet.scriptlet(t), bashShebang) + "\n"
@@ -512,24 +552,22 @@ func (f fnPrefetcher) prefetch(t TestingT) {
 // and compilation messages, which go prints will not influence the test.
 func goRunHelpPrefetcher(tool string) prefetcher {
 	return fnPrefetcher(func(t TestingT) {
-		c := exec.Command("go", "run", tool, "--help")
-		var (
-			stdout, stderr io.ReadCloser
-			err            error
-		)
-		stdout, err = c.StdoutPipe()
+		stdout := bytes.NewBuffer(make([]byte, 0, 1024))
+		stderr := bytes.NewBuffer(make([]byte, 0, 1024))
+		gobin, err := findExecutable("go")
 		require.NoError(t, err)
-		stderr, err = c.StderrPipe()
-		require.NoError(t, err)
+		c := exec.Command(gobin, "run", tool, "--help")
+		c.Env = append(os.Environ(), "GOTOOLCHAIN=auto")
+		c.Stdout = stdout
+		c.Stderr = stderr
 		err = c.Run()
 		if err != nil {
-			stdBytes, merr := io.ReadAll(stdout)
-			require.NoError(t, merr)
-			errBytes, rerr := io.ReadAll(stderr)
-			require.NoError(t, rerr)
+			errBytes := stderr.Bytes()
+			stdBytes := stdout.Bytes()
 			require.NoError(t, err,
-				"------\nSTDOUT\n------", string(stdBytes),
-				"------\nSTDERR\n------", string(errBytes))
+				"───── BEGIN STDOUT ─────\n%s\n────── END STDOUT ──────\n"+
+					"───── BEGIN STDERR ─────\n%s\n────── END STDERR ──────",
+				string(stdBytes), string(errBytes))
 		}
 	})
 }
