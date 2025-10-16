@@ -25,14 +25,16 @@ func TestHelperFunctions(t *testing.T) {
 		stdout: lines("Knative Hack"),
 	}, {
 		name: `get_canonical_path test/unit/library_test.go`,
-		stdout: []check{func(t assert.TestingT, output string) {
-			assert.Contains(t, output, "hack/test/unit/library_test.go")
-			pth := strings.Trim(output, "\n")
-			fi, err := os.Stat(pth)
-			assert.NoError(t, err)
-			assert.False(t, fi.IsDir())
-			assert.True(t, path.IsAbs(pth))
-		}},
+		stdout: []check{
+			contains("hack/test/unit/library_test.go"),
+			func(t TestingT, output string, otype outputType) bool {
+				pth := strings.Trim(output, "\n")
+				fi, err := os.Stat(pth)
+				assert.NoError(t, err)
+				assert.False(t, fi.IsDir())
+				assert.True(t, path.IsAbs(pth))
+				return !t.Failed()
+			}},
 	}, {
 		name:   `capitalize "foo bar"`,
 		stdout: lines("Foo Bar"),
@@ -41,11 +43,11 @@ func TestHelperFunctions(t *testing.T) {
 		stdout: lines(
 			">>> Knative Hack controller logs:",
 			">>> Pod: acme",
-			"kubectl -n test-infra logs acme --all-containers",
+			"👻 kubectl -n test-infra logs acme --all-containers",
 			">>> Pod: example",
-			"kubectl -n test-infra logs example --all-containers",
+			"👻 kubectl -n test-infra logs example --all-containers",
 			">>> Pod: knative",
-			"kubectl -n test-infra logs knative --all-containers",
+			"👻 kubectl -n test-infra logs knative --all-containers",
 		),
 	}, {
 		name:   `is_protected_gcr "gcr.io/knative-releases"`,

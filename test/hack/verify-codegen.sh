@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 The Knative Authors
+# Copyright 2024 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function dump_metrics() {
-  subheader "Starting kube proxy"
-  subheader "Grabbing k8s metrics"
-}
+set -Eeuo pipefail
 
-function dump_cluster_state() {
-  subheader "Dumping the cluster state"
-}
+rootdir="$(realpath "$(dirname "${BASH_SOURCE[0]:-$0}")/../..")"
+cd "${rootdir}"
+
+# shellcheck disable=SC1090
+source "$(go run ./cmd/script library.sh)"
+
+./test/hack/update-codegen.sh
+
+if ! git diff --exit-code; then
+  abort "Codegen is out of date!" "" \
+    "Please, run test/hack/update-codegen.sh, and commit (or stage) the changes."
+fi
+
+header "Codegen is up to date"

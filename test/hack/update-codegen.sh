@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 The Knative Authors
+# Copyright 2024 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function dump_metrics() {
-  subheader "Starting kube proxy"
-  subheader "Grabbing k8s metrics"
-}
+set -Eeuo pipefail
 
-function dump_cluster_state() {
-  subheader "Dumping the cluster state"
-}
+rootdir="$(dirname "${BASH_SOURCE[0]:-$0}")/../.."
+relative_rootdir="$(realpath -s --relative-to="$PWD" "$rootdir")"
+# shellcheck disable=SC1090
+source "$(go run "${relative_rootdir}/cmd/script" codegen-library.sh)"
+
+generate-groups deepcopy \
+  knative.dev/hack/test/codegen/testdata/apis/hack/v1alpha1 \
+  knative.dev/hack/test/codegen/testdata/apis \
+  hack:v1alpha1 \
+  "$@"

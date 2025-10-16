@@ -8,44 +8,43 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-func TestMainFunc(t *testing.T) {
-	t.Parallel()
+func TestPresubmitTestMainFunc(t *testing.T) {
 	sc := newShellScript(
+		mockDeepcopyGen(t),
 		fakeProwJob(),
 		loadFile("source-presubmit-tests.bash"),
 		mockGo(),
 		mockKubectl(),
 	)
 	tcs := []testCase{{
-		name: `main --build-tests`,
+		name: "main --build-tests",
 		stdout: []check{
-			contains("RUNNING BUILD TESTS"),
+			header("RUNNING BUILD TESTS"),
 			contains("Build tests for knative.dev/hack/test"),
 			contains("Build tests for knative.dev/hack/schema"),
 			contains("Build tests for knative.dev/hack"),
 			contains("Checking that go code builds"),
-			contains("go test -vet=off -tags e2e,library -exec echo ./..."),
-			contains("go test -vet=off -tags  -exec echo ./..."),
-			contains("go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
+			contains("👻 go test -vet=off -tags e2e,library -exec echo ./..."),
+			contains("👻 go test -vet=off -tags  -exec echo ./..."),
+			contains("👻 go run knative.dev/test-infra/tools/kntest/cmd/kntest@latest" +
 				" junit --suite=_build_tests --name=Check_Licenses --err-msg= --dest="),
-			contains("BUILD TESTS PASSED"),
+			header("BUILD TESTS PASSED"),
 		},
 	}, {
-		name: `main --unit-tests`,
+		name: "main --unit-tests",
 		stdout: []check{
-			contains("RUNNING UNIT TESTS"),
+			header("RUNNING UNIT TESTS"),
 			contains("Unit tests for knative.dev/hack/test"),
 			contains("Unit tests for knative.dev/hack/schema"),
 			contains("Unit tests for knative.dev/hack"),
 			contains("Running go test with args: -short -race -count 1 ./..."),
-			contains("go run gotest.tools/gotestsum@v1.11.0 --format testname --junitfile"),
+			contains("👻 go run gotest.tools/gotestsum@v1.11.0 --format testname --junitfile"),
 			contains("-- -short -race -count 1 ./..."),
-			contains("UNIT TESTS PASSED"),
+			header("UNIT TESTS PASSED"),
 		},
-	},
-	}
-	for _, tc := range tcs {
-		tc := tc
+	}}
+	for i := range tcs {
+		tc := tcs[i]
 		t.Run(tc.name, tc.test(sc))
 	}
 }

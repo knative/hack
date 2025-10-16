@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 The Knative Authors
+# Copyright 2024 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function dump_metrics() {
-  subheader "Starting kube proxy"
-  subheader "Grabbing k8s metrics"
-}
+set -Eeuo pipefail
 
-function dump_cluster_state() {
-  subheader "Dumping the cluster state"
-}
+# shellcheck disable=SC1090
+source "$(go run "$(realpath "$(dirname "$0")/../../cmd/script")" codegen-library.sh)"

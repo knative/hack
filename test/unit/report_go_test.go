@@ -29,7 +29,7 @@ func TestReportGoTest(t *testing.T) {
 			contains("fatal\tTestFailsWithFatal\tlibrary_test.go:48\tFailed with logger.Fatal()"),
 			contains("FAIL test.TestFailsWithFatal"),
 		}, logChecks...),
-		stderr: lines("exit status 1"),
+		stderr: []check{contains("exit status 1")},
 	}, {
 		name: `report_go_test -tags=library -run TestFailsWithPanic ./test`,
 		stdout: append([]check{
@@ -37,7 +37,7 @@ func TestReportGoTest(t *testing.T) {
 			contains("panic: test timed out after 5m0s"),
 			contains("FAIL test.TestFailsWithPanic"),
 		}, logChecks...),
-		stderr: lines("exit status 1"),
+		stderr: []check{contains("exit status 1")},
 	}, {
 		name: `report_go_test -tags=library -run TestFailsWithSigQuit ./test`,
 		stdout: append([]check{
@@ -45,10 +45,10 @@ func TestReportGoTest(t *testing.T) {
 			contains("SIGQUIT: quit"),
 			contains("FAIL test.TestFailsWithSigQuit"),
 		}, logChecks...),
-		stderr: lines("exit status 1"),
+		stderr: []check{contains("exit status 1")},
 	}}
-	for _, tc := range tcs {
-		tc := tc
+	for i := range tcs {
+		tc := tcs[i]
 		t.Run(tc.name, tc.test(sc))
 	}
 }
