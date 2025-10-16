@@ -47,8 +47,8 @@ func TestReportGoTest(t *testing.T) {
 		}, logChecks...),
 		stderr: []check{contains("exit status 1")},
 	}}
-	for i := range tcs {
-		tc := tcs[i]
+	for _, tc := range tcs {
+		tc := tc
 		t.Run(tc.name, tc.test(sc))
 	}
 }
