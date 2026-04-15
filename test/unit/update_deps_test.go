@@ -29,7 +29,7 @@ func TestUpdateDeps(t *testing.T) {
 			contains("Checking licenses"),
 			contains("Removing unwanted vendor files"),
 			contains("👻 go mod tidy"),
-			contains("👻 go run github.com/google/go-licenses@v1.6.0 check"),
+			contains("👻 go run github.com/google/go-licenses/v2@v2.0.1 check"),
 			contains("👻 go mod download -x"),
 		},
 	}, {
