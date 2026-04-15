@@ -46,18 +46,42 @@ function install_istio() {
       && git checkout FETCH_HEAD
   )
 
+  echo "Resolved net-istio release: ${LATEST_NET_ISTIO_RELEASE_VERSION}"
+  echo "net-istio commit SHA: $(git -C "${NET_ISTIO_DIR}" rev-parse HEAD)"
+
   if [[ -z "${ISTIO_PROFILE:-}" ]]; then
-    readonly ISTIO_PROFILE="istio-ci-no-mesh.yaml"
+    readonly ISTIO_PROFILE="istio-ci-no-mesh"
+  fi
+  # Accept legacy ISTIO_PROFILE values with a trailing .yaml suffix.
+  # Use a local because ISTIO_PROFILE is readonly once set above.
+  local istio_profile="${ISTIO_PROFILE%.yaml}"
+  local istio_dir="${NET_ISTIO_DIR}/third_party/istio-${ISTIO_VERSION}/${istio_profile}"
+
+  if [[ ! -d "${istio_dir}" ]]; then
+    echo "Istio profile directory not found: ${istio_dir}" >&2
+    return 1
   fi
 
   if [[ -n "${CLUSTER_DOMAIN:-}" ]]; then
-    sed -ie "s/cluster\.local/${CLUSTER_DOMAIN}/g" ${NET_ISTIO_DIR}/third_party/istio-${ISTIO_VERSION}/${ISTIO_PROFILE}
+    find "${istio_dir}" -type f -name '*.yaml' -print0 \
+      | xargs -0 sed -i.bak -e "s#cluster\.local#${CLUSTER_DOMAIN}#g"
+    # Clean up the .bak files left behind by sed -i.bak so that any future
+    # "kubectl apply -f <dir>" passes do not trip over them.
+    find "${istio_dir}" -type f -name '*.yaml.bak' -delete
   fi
 
   echo ">> Installing Istio"
   echo "Istio version: ${ISTIO_VERSION}"
-  echo "Istio profile: ${ISTIO_PROFILE}"
-  ${NET_ISTIO_DIR}/third_party/istio-${ISTIO_VERSION}/install-istio.sh ${ISTIO_PROFILE}
+  echo "Istio profile: ${istio_profile}"
+  kubectl apply -f "${istio_dir}" || {
+    echo "Failed to apply Istio manifests from ${istio_dir}" >&2
+    return 1
+  }
+
+  wait_until_pods_running istio-system || {
+    echo "Istio pods in istio-system did not become ready" >&2
+    return 1
+  }
 }
 
 function knative_setup() {
