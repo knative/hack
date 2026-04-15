@@ -35,10 +35,17 @@ if [[ ! -v GOPATH ]]; then
   fi
 fi
 
+# Preserve symlinked path
+function __git-toplevel-with-symlink() {
+  real_root=$(git rev-parse --show-toplevel)
+  echo "${PWD/$(cd "$real_root"; pwd -P)/$real_root}"
+}
+
+
 # Useful environment variables
 [[ -v PROW_JOB_ID ]] && IS_PROW=1 || IS_PROW=0
 readonly IS_PROW
-[[ ! -v REPO_ROOT_DIR ]] && REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
+[[ ! -v REPO_ROOT_DIR ]] && REPO_ROOT_DIR="$(__git-toplevel-with-symlink)"
 readonly REPO_ROOT_DIR
 
 # Resolves the repository name given a root directory.
