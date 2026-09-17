@@ -853,6 +853,13 @@ function __go_update_deps_for_module() {
   go mod tidy 2>&1 | grep -v "ignoring symlink" || true
   go get toolchain@none
 
+  # Run go work use in case of version bump updated go directive in go.mod
+  if [ -f "$REPO_ROOT_DIR/go.work" ] && go help work vendor &>/dev/null; then
+    group "Go work use"
+    go work use 2>&1 || true
+  fi
+
+
   if [[ "${FORCE_VENDOR:-false}" == "true" ]] || [ -d vendor ]; then
     group "Go mod vendor"
     # Call go work vendor for Go 1.22+ and go.work file exists.
