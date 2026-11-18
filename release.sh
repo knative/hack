@@ -239,11 +239,17 @@ function prepare_dot_release() {
   local last_build="$(patch_version "${last_version}")"
   RELEASE_VERSION="${major_minor_version}.$(( last_build + 1 ))"
   echo "Will create release ${RELEASE_VERSION} at commit ${release_branch_commit}"
-  # If --release-notes not used, copy from the latest release
+  # If --release-notes not used, generate notes since the previous release.
   if [[ -z "${RELEASE_NOTES}" ]]; then
+    local next_tag="v${RELEASE_VERSION}"
+    [[ "${next_tag}" == "v1"* ]] && next_tag="knative-${next_tag}"
     RELEASE_NOTES="$(mktemp)"
-    gh_tool release view "${github_tag}" --json "body" --jq '.body' > "${RELEASE_NOTES}"
-    echo "Release notes from ${last_version} copied to ${RELEASE_NOTES}"
+    gh_tool api --method POST "repos/${ORG_NAME}/${REPO_NAME}/releases/generate-notes" \
+      -f "tag_name=${next_tag}" \
+      -f "target_commitish=${RELEASE_BRANCH}" \
+      -f "previous_tag_name=${github_tag}" \
+      --jq '.body' > "${RELEASE_NOTES}" || abort "cannot generate release notes"
+    echo "Release notes since ${last_version} generated in ${RELEASE_NOTES}"
   fi
 }
 
