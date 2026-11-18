@@ -132,6 +132,65 @@ func TestReleaseHelperFunctions(t *testing.T) {
 	}
 }
 
+func TestPrepareDotReleaseNotes(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name        string
+		previousTag string
+		nextTag     string
+		customNotes bool
+		fail        bool
+	}{
+		{name: "prefixed tags", previousTag: "knative-v1.2.3", nextTag: "knative-v1.2.4"},
+		{name: "unprefixed tags", previousTag: "v0.2.3", nextTag: "v0.2.4"},
+		{name: "custom notes", previousTag: "knative-v1.2.3", customNotes: true},
+		{name: "generation failure", previousTag: "knative-v1.2.3", nextTag: "knative-v1.2.4", fail: true},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			sc := testReleaseShellScript(instructions(fmt.Sprintf(`
+function git() {
+  case "$*" in
+    "fetch --all"|fetch\ *) ;;
+    *upstream/release-*) echo new-commit ;;
+    "rev-list "*) echo previous-commit ;;
+    *) echo "Unexpected git arguments: $*" >&2; return 1 ;;
+  esac
+}
+function gh_tool() {
+  if [[ "$*" == "release list --json tagName --jq .[].tagName" ]]; then
+    echo %q
+  elif [[ "$*" == "api --method POST repos/${ORG_NAME}/${REPO_NAME}/releases/generate-notes -f tag_name=%s -f target_commitish=${RELEASE_BRANCH} -f previous_tag_name=%s --jq .body" ]]; then
+    [[ %t == false ]] || return 1
+    echo "Generated release notes"
+  else
+    echo "Unexpected gh arguments: $*" >&2
+    return 1
+  fi
+}
+`, tc.previousTag, tc.nextTag, tc.previousTag, tc.fail)))
+			commands := []string{}
+			if tc.customNotes {
+				commands = append(commands, `RELEASE_NOTES="$(mktemp)"`, `echo "Custom release notes" > "${RELEASE_NOTES}"`)
+			}
+			commands = append(commands, `prepare_dot_release`, `cat "${RELEASE_NOTES}"`)
+			checks := []check{contains("Generated release notes")}
+			if tc.customNotes {
+				checks = []check{contains("Custom release notes")}
+			}
+			var stderr []check
+			if tc.fail {
+				checks = []check{contains("Will create release 1.2.4")}
+				stderr = aborted("cannot generate release notes")
+			}
+			testCase{
+				name: tc.name, commands: commands, stdout: checks, stderr: stderr,
+			}.test(sc)(t)
+		})
+	}
+}
+
 func TestReleaseFlagParsingVersion(t *testing.T) {
 	t.Parallel()
 	sc := testReleaseShellScript()
