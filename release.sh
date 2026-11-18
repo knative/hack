@@ -72,6 +72,7 @@ BUILD_TIMESTAMP=""
 BUILD_TAG=""
 RELEASE_VERSION=""
 RELEASE_NOTES=""
+RELEASE_NOTES_START_TAG=""
 RELEASE_BRANCH=""
 RELEASE_GCS_BUCKET="knative-nightly/${REPO_NAME}"
 RELEASE_DIR=""
@@ -239,18 +240,8 @@ function prepare_dot_release() {
   local last_build="$(patch_version "${last_version}")"
   RELEASE_VERSION="${major_minor_version}.$(( last_build + 1 ))"
   echo "Will create release ${RELEASE_VERSION} at commit ${release_branch_commit}"
-  # If --release-notes not used, generate notes since the previous release.
-  if [[ -z "${RELEASE_NOTES}" ]]; then
-    local next_tag="v${RELEASE_VERSION}"
-    [[ "${next_tag}" == "v1"* ]] && next_tag="knative-${next_tag}"
-    RELEASE_NOTES="$(mktemp)"
-    gh_tool api --method POST "repos/${ORG_NAME}/${REPO_NAME}/releases/generate-notes" \
-      -f "tag_name=${next_tag}" \
-      -f "target_commitish=${RELEASE_BRANCH}" \
-      -f "previous_tag_name=${github_tag}" \
-      --jq '.body' > "${RELEASE_NOTES}" || abort "cannot generate release notes"
-    echo "Release notes since ${last_version} generated in ${RELEASE_NOTES}"
-  fi
+  # Generate notes since the previous release when publishing, unless overridden.
+  RELEASE_NOTES_START_TAG="${github_tag}"
 }
 
 # Setup source nightly image for a release.
@@ -767,6 +758,11 @@ function publish_to_github() {
     cat "${RELEASE_NOTES}" >> "${description}"
   fi
 
+  local notes_args=(--notes-file "${description}")
+  if [[ -z "${RELEASE_NOTES}" && -n "${RELEASE_NOTES_START_TAG}" ]]; then
+    notes_args=(--generate-notes --notes-start-tag "${RELEASE_NOTES_START_TAG}")
+  fi
+
   # Include a tag for the go module version
   #
   # v1.0.0 = v0.27.0
@@ -793,7 +789,7 @@ function publish_to_github() {
     gh_tool release create \
       "${github_tag}" \
       --title "${title}" \
-      --notes-file "${description}" \
+      "${notes_args[@]}" \
       "${target_branch}" \
       ${attachments[@]} && return 0
 
