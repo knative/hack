@@ -94,7 +94,7 @@ readonly IMAGES_REFS_FILE="${IMAGES_REFS_FILE:-$(mktemp -d)/images_refs.txt}"
 # Convenience function to run the GitHub CLI tool `gh`.
 # Parameters: $1..$n - arguments to gh.
 function gh_tool() {
-  go_run github.com/cli/cli/v2/cmd/gh@v2.65.0 "$@"
+  go_run github.com/cli/cli/v2/cmd/gh@v2.105.0 "$@"
 }
 
 # Shortcut to "git push" that handles authentication.
