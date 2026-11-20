@@ -13,6 +13,7 @@ for a list of help wanted issues across the project.
 This is a helper script to run the presubmit tests. To use it:
 
 1. Source this script:
+
    ```bash
    source "$(go run knative.dev/hack/cmd/script presubmit-tests.sh)"
    ```
@@ -108,9 +109,10 @@ This is a helper script for Knative E2E test scripts. To use it:
    call if the default values don't fit your needs.
 
 1. Source the script:
-    ```bash
-    source "$(go run knative.dev/hack/cmd/script e2e-tests.sh)"
-    ```
+
+   ```bash
+   source "$(go run knative.dev/hack/cmd/script e2e-tests.sh)"
+   ```
 
 1. [optional] Write the `knative_setup()` function, which will set up your
    system under test (e.g., Knative Serving).
@@ -166,9 +168,10 @@ This is a helper script for Knative E2E test scripts. To use it:
 
 1. By default Google Kubernetes Engine telemetry to Cloud Logging and Monitoring is disabled.
    This can be enabled by setting `ENABLE_GKE_TELEMETRY` to `true`.
-   
+
 1. By default Spot Worker nodes are disabled. This can be enabled by setting `ENABLE_PREEMPTIBLE_NODES`
    to `true`.
+
 ### Sample end-to-end test script
 
 This script will test that the latest Knative Serving nightly release works. It
@@ -212,6 +215,7 @@ with specific Prow jobs, it can automatically manage the environment for running
 benchmarking jobs for each repo. To use it:
 
 1. Source the script:
+
    ```bash
    source "$(go run knative.dev/hack/cmd/script performance-tests.sh)"
    ```
@@ -271,9 +275,10 @@ main $@
 This is a helper script for Knative release scripts. To use it:
 
 1. Source the script:
-    ```bash
-    source "$(go run knative.dev/hack/cmd/script release.sh)"
-    ```
+
+   ```bash
+   source "$(go run knative.dev/hack/cmd/script release.sh)"
+   ```
 
 1. [optional] By default, the release script will run
    `./test/presubmit-tests.sh` as the release validation tests. If you need to

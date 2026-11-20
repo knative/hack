@@ -1,15 +1,15 @@
 # Schema Tool
 
 > [!WARNING]  
-> This module is now deprecated. Please, use [k8s controller-gen](sigs.k8s.io/controller-tools/cmd/controller-gen) 
+> This module is now deprecated. Please, use [k8s controller-gen](sigs.k8s.io/controller-tools/cmd/controller-gen)
 > instead. See, example: https://github.com/knative-extensions/sample-controller/pull/931
 
-Schema is a seed of a CLI tool that a downstream can use to use reflection and go file inspection to 
+Schema is a seed of a CLI tool that a downstream can use to use reflection and go file inspection to
 generate a base version of OpenAPI for a CRD. The resulting schema will be used by Kubernetes to
 provide results from `kubectl explain <type>` calls, and type validation.
 
-Knative does not currently support full CRD generation via tools like 
-[controller-gen][controller-gen], this tool is to be used to support managing CRD manifests 
+Knative does not currently support full CRD generation via tools like
+[controller-gen][controller-gen], this tool is to be used to support managing CRD manifests
 manually.
 
 ## Integration steps
@@ -32,17 +32,17 @@ go run ./ dump LoremIpsum | pbcopy
 Paste this inside the CRD for LoremIpsum,
 
 ```yaml
+
 ...
-      schema:
-        openAPIV3Schema:
-          <**paste**>
-      additionalPrinterColumns:
+schema:
+  openAPIV3Schema: <**paste**>
+additionalPrinterColumns:
 ...
 ```
 
 ### Downstream
 
-Start with [example.go](./example.go), copy this into the downstream and modify which 
+Start with [example.go](./example.go), copy this into the downstream and modify which
 kinds are registered via `registry.Register`. You can register more than one kind at a time. (TODO: support versions in the CLI.)
-                
+
 [controller-gen]: https://github.com/kubernetes-sigs/controller-tools/tree/master/cmd/controller-gen
