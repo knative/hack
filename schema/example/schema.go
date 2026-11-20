@@ -91,7 +91,7 @@ type LoremSpec struct {
 	// euismod, nisl nunc mattis quam, et gravida risus diam at nulla. Donec
 	// interdum, tortor a semper tincidunt, nibh odio euismod orci, rhoncus
 	// rhoncus purus lacus pharetra mi. Suspendisse placerat dignissim magna
-	// convallis dictum. Nulla facilisi. Vivamus sed tristique turpis.
+	// convallis dictum. Nulla facilities. Vivamus sed tristique turpis.
 	Praesent string `json:"praesent,omitempty"`
 
 	// Ccc shows loop protection.
