@@ -292,6 +292,9 @@ This is a helper script for Knative release scripts. To use it:
      branch.
    - `RELEASE_NOTES`: contains the filename with the release notes if
      `--release-notes` was passed. The release notes is a simple markdown file.
+     For `--dot-release`, notes are generated when publishing with
+     `gh release create --generate-notes --notes-start-tag <previous-release-tag>`
+     unless `--release-notes` is passed.
    - `RELEASE_GCS_BUCKET`: contains the GCS bucket name to store the manifests
      if `--release-gcs` was passed, otherwise the default value
      `knative-nightly/<repo>` will be used. It is empty if `--publish` was not
